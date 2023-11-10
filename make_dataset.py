@@ -59,7 +59,7 @@ def clean_comment(comments:list):
 
 def process_file(row):
     result = []
-    prettify(row['sol_file'])
+    #prettify(row['sol_file'])
     code_and_comment = fragment_code(get_file_content(row['sol_file']))
 
     for cm, cd in code_and_comment:
