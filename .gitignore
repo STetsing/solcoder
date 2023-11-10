@@ -1,0 +1,6 @@
+slither_processed_contracts.pkl
+full_match
+partial_match
+node_modules
+temp
+*.pkl
