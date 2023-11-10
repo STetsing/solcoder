@@ -1,0 +1,3 @@
+[submodule "solidity_parser"]
+	path = solidity_parser
+	url = https://github.com/STetsing/solidity_parser.git
