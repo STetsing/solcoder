@@ -4,3 +4,5 @@ partial_match
 node_modules
 temp
 *.pkl
+data
+**/*.pkl
