@@ -6,3 +6,5 @@ temp
 *.pkl
 data
 **/*.pkl
+training_models
+trained_model_last_epoch
