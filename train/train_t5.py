@@ -11,7 +11,8 @@ from transformers import T5ForConditionalGeneration, RobertaTokenizer, Seq2SeqTr
 from accelerate import Accelerator
 from datasets import load_metric, load_from_disk 
 
-device = "cuda" if torch.cuda.is_available() else 'mps'
+#device = "cuda" 
+
 device = Accelerator.device
 print('Info: Computing device is:', device)
 
@@ -36,10 +37,10 @@ def compute_metrics(eval_preds):
 base_model = "Salesforce/codet5-base"
 sol_tok_model = "Pipper/finetuned_sol"
 tokenizer = RobertaTokenizer.from_pretrained(base_model)
-model = T5ForConditionalGeneration.from_pretrained(base_model).to(device)
+model = T5ForConditionalGeneration.from_pretrained(base_model)
 
-max_input_length = 256
-max_target_length = 512
+max_input_length = 512
+max_target_length = 1024
 prefix = "Generate Solidity: "
 
 def process_samples(samples):
@@ -50,7 +51,7 @@ def process_samples(samples):
     model_inputs = tokenizer(inputs, max_length=max_input_length, padding="max_length", truncation=True)
 
     # encode the summaries
-    labels = tokenizer(codes, max_length=max_target_length, padding="max_length", truncation=False).input_ids
+    labels = tokenizer(codes, max_length=max_target_length, padding="max_length", truncation=True, return_overflowing_tokens=True).input_ids
 
     # important: we need to replace the index of the padding tokens by -100
     # such that they are not taken into account by the CrossEntropyLoss
@@ -65,14 +66,15 @@ def process_samples(samples):
 
 if not os.path.exists('./sol_dataset'):
     print('loading dataset for the first time')
+    os.makedirs('./sol_dataset', exist_ok=True)
     data_path = 'filtered_comment_code_sol.pkl'
-    df = pd.read_pickle(data_path)
+    df = pd.read_pickle(data_path)[:10000]
     dataset = Dataset.from_pandas(df)
-    dataset = dataset.map(process_samples, batched=True) 
+    dataset = dataset.map(process_samples, batched=True, batch_size=32, num_proc=8) 
     dataset.save_to_disk('./sol_dataset')
 else:
     print('Info: loading preprocessed set from disk ...')
-    dataset = load_from_disk('./sol_dataset')
+    dataset = load_from_disk('./sol_dataset', keep_in_memory=True)
     print('Info: loaded preprocessed set from disk!')
 
 dataset = dataset.train_test_split(test_size=0.1)
@@ -83,8 +85,8 @@ training_args = Seq2SeqTrainingArguments(
     "training_models",
     evaluation_strategy='epoch', 
     learning_rate=1e-4, 
-    per_device_eval_batch_size=10,
-    per_device_train_batch_size=10,
+    per_device_eval_batch_size=2,
+    per_device_train_batch_size=2,
     num_train_epochs=30,
     push_to_hub=False,
     save_total_limit=2,
