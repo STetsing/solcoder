@@ -1,13 +1,18 @@
 import datasets
 import torch 
+import os 
 import numpy as np
 import pandas as pd
 import evaluate
 from datasets import Dataset
 from tqdm import tqdm
 from transformers import T5ForConditionalGeneration, RobertaTokenizer, Seq2SeqTrainingArguments, Seq2SeqTrainer, AutoTokenizer, DataCollatorForSeq2Seq
+from accelerate import Accelerator
+from datasets import load_metric, load_from_disk 
 
 device = "cuda" if torch.cuda.is_available() else 'mps'
+device = Accelerator.device
+print('Info: Computing device is:', device)
 
 metric = evaluate.load('rouge')
 def compute_metrics(eval_preds):
@@ -25,10 +30,6 @@ def compute_metrics(eval_preds):
     result = metric.compute(predictions=decoded_preds, references=decoded_labels, use_stemmer=True)
     return result
 
-
-data_path = 'filtered_comment_code_sol.pkl'
-df = pd.read_pickle(data_path)[:100]
-dataset = Dataset.from_pandas(df)
 
 base_model = "Salesforce/codet5-base"
 sol_tok_model = "Pipper/finetuned_sol"
@@ -60,7 +61,20 @@ def process_samples(samples):
 
     return model_inputs
 
-dataset = dataset.map(process_samples, batched=True, num_proc=5)
+
+if not os.path.exists('./sol_dataset'):
+    print('INFO: processing data for the firs time')
+    data_path = 'filtered_comment_code_sol.pkl'
+    df = pd.read_pickle(data_path)[:100]
+    dataset = Dataset.from_pandas(df)
+    dataset = dataset.map(process_samples, batched=True, num_proc=5)
+    dataset.save_to_disk('./sol_dataset')
+else:
+    print('Info: loading preprocessed set from disk...')
+    dataset = load_from_disk('./sol_dataset')
+    print('Info: loaded preprocessed set from disk!')
+
+
 dataset = dataset.train_test_split(test_size=0.1)
 train_set = dataset['train']
 eval_set = dataset['test']
