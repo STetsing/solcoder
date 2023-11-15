@@ -1,3 +1,4 @@
+import os 
 import datasets
 import torch 
 import numpy as np
@@ -27,7 +28,7 @@ def compute_metrics(eval_preds):
 
 
 data_path = 'filtered_comment_code_sol.pkl'
-df = pd.read_pickle(data_path)[:100]
+df = pd.read_pickle(data_path)
 dataset = Dataset.from_pandas(df)
 
 base_model = "Salesforce/codet5-base"
@@ -60,7 +61,13 @@ def process_samples(samples):
 
     return model_inputs
 
-dataset = dataset.map(process_samples, batched=True, num_proc=5)
+if not os.path.exists('./sol_dataset'):
+    dataset = dataset.map(process_samples, batched=True) 
+    dataset.save_to_disk('./sol_dataset')
+else:
+    print('Info: loaded preprocessed set from disk!')
+    dataset = load_from_disk('./sol_dataset')
+
 dataset = dataset.train_test_split(test_size=0.1)
 train_set = dataset['train']
 eval_set = dataset['test']
@@ -69,9 +76,9 @@ training_args = Seq2SeqTrainingArguments(
     "training_models",
     evaluation_strategy='epoch', 
     learning_rate=1e-4, 
-    per_device_eval_batch_size=1,
-    per_device_train_batch_size=1,
-    num_train_epochs=10,
+    per_device_eval_batch_size=10,
+    per_device_train_batch_size=10,
+    num_train_epochs=30,
     push_to_hub=False,
     save_total_limit=2,
     load_best_model_at_end=True,
