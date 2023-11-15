@@ -15,7 +15,7 @@ model = T5ForConditionalGeneration.from_pretrained(model_path).to(device)
 
 def infer(comment):
     input_ids = tokenizer(comment, return_tensors='pt').input_ids
-    outputs = model.generate(input_ids, max_new_tokens=1000)
+    outputs = model.generate(input_ids, max_new_tokens=200)
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-print(infer("contract token "))
+print(infer("function that adds 2 numbers"))
