@@ -32,9 +32,6 @@ def compute_metrics(eval_preds):
     return result
 
 
-data_path = 'filtered_comment_code_sol.pkl'
-df = pd.read_pickle(data_path)
-dataset = Dataset.from_pandas(df)
 
 base_model = "Salesforce/codet5-base"
 sol_tok_model = "Pipper/finetuned_sol"
@@ -67,11 +64,16 @@ def process_samples(samples):
     return model_inputs
 
 if not os.path.exists('./sol_dataset'):
+    print('loading dataset for the first time')
+    data_path = 'filtered_comment_code_sol.pkl'
+    df = pd.read_pickle(data_path)
+    dataset = Dataset.from_pandas(df)
     dataset = dataset.map(process_samples, batched=True) 
     dataset.save_to_disk('./sol_dataset')
 else:
-    print('Info: loaded preprocessed set from disk!')
+    print('Info: loading preprocessed set from disk ...')
     dataset = load_from_disk('./sol_dataset')
+    print('Info: loaded preprocessed set from disk!')
 
 dataset = dataset.train_test_split(test_size=0.1)
 train_set = dataset['train']
