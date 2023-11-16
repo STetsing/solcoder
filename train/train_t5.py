@@ -9,7 +9,8 @@ from datasets import Dataset
 from tqdm import tqdm
 from transformers import T5ForConditionalGeneration, RobertaTokenizer, Seq2SeqTrainingArguments, Seq2SeqTrainer, AutoTokenizer, DataCollatorForSeq2Seq
 from accelerate import Accelerator
-from datasets import load_metric, load_from_disk 
+from datasets import load_metric, load_from_disk, load_dataset
+from datetime import datetime
 
 #device = "cuda" 
 
@@ -17,6 +18,8 @@ device = Accelerator.device
 print('Info: Computing device is:', device)
 
 metric = evaluate.load('rouge')
+process_local = False
+
 def compute_metrics(eval_preds):
     preds, labels = eval_preds
 
@@ -64,18 +67,23 @@ def process_samples(samples):
 
     return model_inputs
 
-if not os.path.exists('./sol_dataset'):
-    print('loading dataset for the first time')
-    os.makedirs('./sol_dataset', exist_ok=True)
-    data_path = 'filtered_comment_code_sol.pkl'
-    df = pd.read_pickle(data_path)[:10000]
-    dataset = Dataset.from_pandas(df)
-    dataset = dataset.map(process_samples, batched=True, batch_size=32, num_proc=8) 
-    dataset.save_to_disk('./sol_dataset')
-else:
-    print('Info: loading preprocessed set from disk ...')
-    dataset = load_from_disk('./sol_dataset', keep_in_memory=True)
-    print('Info: loaded preprocessed set from disk!')
+if process_local:
+    if not os.path.exists('./sol_dataset'):
+        print('loading dataset for the first time')
+        os.makedirs('./sol_dataset', exist_ok=True)
+        data_path = 'filtered_comment_code_sol.pkl'
+        df = pd.read_pickle(data_path)
+        dataset = Dataset.from_pandas(df)
+        dataset = dataset.map(process_samples, batched=True, batch_size=32, num_proc=8) 
+        dataset.save_to_disk('./sol_dataset')
+    else:
+        print('Info: loading preprocessed set from disk ...')
+        dataset = load_from_disk('./sol_dataset', keep_in_memory=True)
+        print('Info: loaded preprocessed set from disk!')
+else: 
+    print('Info: loaded preprocessed set from hugginface space ...')
+    dataset = load_dataset("Pipper/sol_processed_s2s", )
+    print('Info: loaded preprocessed set from hugginface space!')
 
 dataset = dataset.train_test_split(test_size=0.1)
 train_set = dataset['train']
@@ -113,3 +121,4 @@ trainer.train()
 tokenizer.save_pretrained('./trained_model_last_epoch')
 trainer.save_model('./trained_model_last_epoch')
 
+trainer.push_to_hub("sol_com2cod",commit_message="training comment 2 code done", token=os.environ.get("HF_TOKEN"))

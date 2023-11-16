@@ -25,3 +25,9 @@ ds = load_dataset("bigcode/the-stack-dedup", data_dir="data/solidity", split="tr
 
 ## Audit and Security
 IMPORTANT: None of the code parsed in the dataset is statically audited or further audited if already. Use static analyzers such as [slither](https://github.com/crytic/slither#api-documentation)
+
+## Setup the hugginface token 
+Important: The token must have write access
+``` 
+export HF_TOKEN="your write access token"
+```
