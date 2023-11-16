@@ -121,4 +121,4 @@ trainer.train()
 tokenizer.save_pretrained('./trained_model_last_epoch')
 trainer.save_model('./trained_model_last_epoch')
 
-trainer.push_to_hub("sol_com2cod",commit_message="training comment 2 code done", token=os.environ.get("HF_TOKEN"))
+trainer.push_to_hub("sol_com2cod",commit_message="training comment 2 code done"+datetime.now.strftime("%m/%d/%Y, %H:%M:%S"), token=os.environ.get("HF_TOKEN"))
