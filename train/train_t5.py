@@ -102,7 +102,7 @@ training_args = Seq2SeqTrainingArguments(
     save_strategy = "epoch",
     prediction_loss_only=True,
     logging_strategy="steps",
-    logging_steps=500,
+    logging_steps=1000,
     seed=100
 )
 data_collator = DataCollatorForSeq2Seq(tokenizer=tokenizer, model=model)
