@@ -90,7 +90,7 @@ train_set = dataset['train']
 eval_set = dataset['test']
 
 training_args = Seq2SeqTrainingArguments(
-    "training_models",
+    "sol_processed_s2s",
     evaluation_strategy='epoch', 
     learning_rate=1e-4, 
     per_device_eval_batch_size=2,
@@ -121,4 +121,4 @@ trainer.train()
 tokenizer.save_pretrained('./trained_model_last_epoch')
 trainer.save_model('./trained_model_last_epoch')
 
-trainer.push_to_hub("sol_com2cod",commit_message="training comment 2 code done"+datetime.now.strftime("%m/%d/%Y, %H:%M:%S"), token=os.environ.get("HF_TOKEN"))
+trainer.push_to_hub(commit_message="training comment 2 code done"+datetime.now.strftime("%m/%d/%Y, %H:%M:%S"))
