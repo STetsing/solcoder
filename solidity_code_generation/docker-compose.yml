@@ -7,5 +7,5 @@ services:
     volumes:
       - .:/sg_s2s_infer
     ports:
-      - "8080:8080"
+      - "8080:9080"
     restart: always
