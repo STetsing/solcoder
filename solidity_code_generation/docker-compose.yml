@@ -1,0 +1,11 @@
+version: '3'
+services:
+  solidity_generator_infer:
+    build:
+      context: .
+    container_name: sg_s2s_infer
+    volumes:
+      - .:/sg_s2s_infer
+    ports:
+      - "8080:8080"
+    restart: always

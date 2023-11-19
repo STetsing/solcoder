@@ -9,3 +9,5 @@ data
 training_models
 trained_model_last_epoch
 sol_dataset
+**/__pycahce__
+.DS_Store
