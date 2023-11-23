@@ -11,3 +11,4 @@ trained_model_last_epoch
 sol_dataset
 **/__pycahce__
 .DS_Store
+SolCoder

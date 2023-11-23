@@ -16,7 +16,7 @@ model = T5ForConditionalGeneration.from_pretrained(model_path).to(device)
 
 def infer(comment):
     input_ids = tokenizer(comment, return_tensors='pt').input_ids
-    outputs = model.generate(input_ids, max_new_tokens=200)
+    outputs = model.generate(input_ids, max_new_tokens=200, temperature=0.8)
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
 print(infer("contract crazy token "))

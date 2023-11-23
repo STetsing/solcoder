@@ -24,7 +24,8 @@ def compute_metrics(eval_preds):
     preds, labels = eval_preds
 
     # decode preds and labels
-    labels = np.where(labels != -100, labels, tokenizer.pad_token_id)
+    labels = np.where(np.array(labels) != -100, labels, tokenizer.pad_token_id)
+    preds = np.where(np.array(preds) != -100, labels, tokenizer.pad_token_id)
     decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
     decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
 
@@ -36,9 +37,8 @@ def compute_metrics(eval_preds):
     return result
 
 
-
-base_model = "Salesforce/codet5-base"
-sol_tok_model = "Pipper/finetuned_sol"
+base_model = "Pipper/SolCoder"
+sol_tok_model = "Pipper/SolCoder"
 tokenizer = RobertaTokenizer.from_pretrained(base_model)
 model = T5ForConditionalGeneration.from_pretrained(base_model)
 
@@ -77,11 +77,11 @@ if process_local:
         dataset = dataset.map(process_samples, batched=True, batch_size=32, num_proc=8) 
         dataset.save_to_disk('./sol_dataset')
     else:
-        print('Info: loading preprocessed set from disk ...')
+        print('Info: loading preprocessed set from disk...')
         dataset = load_from_disk('./sol_dataset', keep_in_memory=True)
         print('Info: loaded preprocessed set from disk!')
 else: 
-    print('Info: loaded preprocessed set from hugginface space ...')
+    print('Info: loaded preprocessed set from hugginface space...')
     dataset = load_dataset("Pipper/sol_processed_s2s", )
     print('Info: loaded preprocessed set from hugginface space!')
 
@@ -90,7 +90,7 @@ train_set = dataset['train']
 eval_set = dataset['test']
 
 training_args = Seq2SeqTrainingArguments(
-    "sol_processed_s2s",
+    "SolCoder",
     evaluation_strategy='epoch', 
     learning_rate=1e-4, 
     per_device_eval_batch_size=2,
