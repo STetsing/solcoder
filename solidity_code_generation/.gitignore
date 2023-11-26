@@ -1,1 +1,3 @@
 solidity-generator
+__pycache__/
+*.pyc
