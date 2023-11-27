@@ -4,7 +4,7 @@ import torch
 from transformers import T5ForConditionalGeneration, RobertaTokenizer, AutoTokenizer
 device = "cuda" if torch.cuda.is_available() else 'cpu'
 
-model_path = 'Pipper/Pipper/SolCoder'
+model_path = 'Pipper/SolCoder'
 
 tokenizer = RobertaTokenizer.from_pretrained(model_path)
 model = T5ForConditionalGeneration.from_pretrained(model_path).to(device)
