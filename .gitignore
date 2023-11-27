@@ -12,10 +12,5 @@ sol_dataset
 **/__pycahce__
 .DS_Store
 SolCoder
-solidity_code_generation/app/__pycache__/views.cpython-310.pyc
-solidity_code_generation/app/__pycache__/views.cpython-310.pyc
-solidity_code_generation/app/__pycache__/main.cpython-310.pyc
-solidity_code_generation/app/__pycache__/__init__.cpython-310.pyc
-solidity_code_generation/__pycache__/infer.cpython-310.pyc
-solidity_code_generation/app/__pycache__/views.cpython-310.pyc
-solidity_code_generation/app/__pycache__/views.cpython-310.pyc
+__pycache__/
+*.pyc
