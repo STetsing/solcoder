@@ -10,7 +10,7 @@ metric = evaluate.load('rouge')
 tokenizer = RobertaTokenizer.from_pretrained(base_model)
 model = T5ForConditionalGeneration.from_pretrained(base_model)
 
-dataset = load_dataset("Pipper/sol_processed_s2s")['train']
+dataset = load_dataset("Pipper/sol_processed_s2s")['test']
 small_ds = dataset.select(np.arange(100,5000,10))
 
 def compute_metrics_2(preds, labels):
@@ -39,5 +39,5 @@ small_ds = small_ds.map(get_metric)
 
 rouge_results = pd.DataFrame(small_ds['rouge'])
 
-print('Info: Rouge score')
+print('INFO: Mean Rouge Score')
 print(rouge_results.mean(axis=0))
