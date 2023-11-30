@@ -9,16 +9,16 @@ from datasets import Dataset
 from tqdm import tqdm
 from transformers import T5ForConditionalGeneration, RobertaTokenizer, Seq2SeqTrainingArguments, Seq2SeqTrainer, AutoTokenizer, DataCollatorForSeq2Seq
 from accelerate import Accelerator
-from datasets import load_metric, load_from_disk, load_dataset
+from datasets import load_metric, load_from_disk, load_dataset, DatasetDict
 from datetime import datetime
 
 #device = "cuda" 
 
 device = Accelerator.device
-print('Info: Computing device is:', device)
+print('INFO: Computing device is:', device)
 
 metric = evaluate.load('rouge')
-process_local = False
+process_local = True
 
 def compute_metrics(eval_preds):
     preds, labels = eval_preds
@@ -69,25 +69,38 @@ def process_samples(samples):
 
 if process_local:
     if not os.path.exists('./sol_dataset'):
-        print('loading dataset for the first time')
+        print('INFO: loading dataset for the first time ...')
         os.makedirs('./sol_dataset', exist_ok=True)
         data_path = 'filtered_comment_code_sol.pkl'
-        df = pd.read_pickle(data_path)
+        df = pd.read_pickle(data_path)[:100]
         dataset = Dataset.from_pandas(df)
-        dataset = dataset.map(process_samples, batched=True, batch_size=32, num_proc=8) 
-        dataset.save_to_disk('./sol_dataset')
+        dataset = dataset.map(process_samples, batched=True, batch_size=32, num_proc=8)
+        dataset = dataset.train_test_split(test_size=0.1)
+        test_valid = dataset['test'].train_test_split(test_size=0.5)
+
+        split_dataset = DatasetDict({
+                                    'train': dataset['train'],
+                                    'test': test_valid['test'],
+                                    'valid': test_valid['train']
+                                    })
+
+        split_dataset.save_to_disk('./sol_dataset')
+        
+        # also push dataset to repo
+        split_dataset.push_to_hub("Pipper/sol_processed_s2s", token=os.environ.get("HF_TOKEN"))
+        print('Info: Pushed preprocessed data to hub')
+
     else:
         print('Info: loading preprocessed set from disk...')
         dataset = load_from_disk('./sol_dataset', keep_in_memory=True)
         print('Info: loaded preprocessed set from disk!')
 else: 
-    print('Info: loaded preprocessed set from hugginface space...')
-    dataset = load_dataset("Pipper/sol_processed_s2s", )
+    print('Info: loading preprocessed set from hugginface space...')
+    dataset = load_dataset("Pipper/sol_processed_s2s")
     print('Info: loaded preprocessed set from hugginface space!')
 
-dataset = dataset.train_test_split(test_size=0.1)
 train_set = dataset['train']
-eval_set = dataset['test']
+eval_set = dataset['valid']
 
 training_args = Seq2SeqTrainingArguments(
     "SolCoder",

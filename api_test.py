@@ -1,7 +1,7 @@
 import requests
 import os
 
-API_URL = "https://api-inference.huggingface.co/models/Pipper/sol_processed_s2s"
+API_URL = "https://api-inference.huggingface.co/models/Pipper/SolCoder"
 headers = {"Authorization": "Bearer " +  os.environ.get("HF_BEARER_TK")}
 
 def query(payload):
@@ -9,7 +9,8 @@ def query(payload):
 	return response.json()
 	
 output = query({
-	"inputs": "get the vote winner",
+	"inputs": "add 2 numbers and return result using math library",
+	"aggregation_strategy": "max"
 })
 
 print(output)
