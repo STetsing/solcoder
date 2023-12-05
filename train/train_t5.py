@@ -1,4 +1,4 @@
-import os 
+import os, sys
 import datasets
 import torch 
 import os 
@@ -46,11 +46,23 @@ max_input_length = 512
 max_target_length = 1024
 prefix = "Generate Solidity: "
 
+def strip_comment(com):
+    com = com.replace('*','').strip()
+    com = com.replace('@title','').strip()
+    com = com.replace('@author','').strip()
+    com = com.replace('@notice','').strip()
+    com = com.replace('@dev','').strip()
+    com = com.replace('@param','').strip()
+    com = com.replace('@return','return').strip()
+    return com
+
+
+
 def process_samples(samples):
     codes = samples['code_string']
     comments = samples['comments']
 
-    inputs = [prefix + cm for cm in comments]
+    inputs = [prefix + strip_comment(cm) for cm in comments]
     model_inputs = tokenizer(inputs, max_length=max_input_length, padding="max_length", truncation=True)
 
     # encode the summaries
@@ -72,9 +84,10 @@ if process_local:
         print('INFO: loading dataset for the first time ...')
         os.makedirs('./sol_dataset', exist_ok=True)
         data_path = 'filtered_comment_code_sol.pkl'
-        df = pd.read_pickle(data_path)[:100]
+        df = pd.read_pickle(data_path)
         dataset = Dataset.from_pandas(df)
-        dataset = dataset.map(process_samples, batched=True, batch_size=32, num_proc=8)
+        del df
+        dataset = dataset.map(process_samples, batched=True, batch_size=8, num_proc=50)
         dataset = dataset.train_test_split(test_size=0.1)
         test_valid = dataset['test'].train_test_split(test_size=0.5)
 
