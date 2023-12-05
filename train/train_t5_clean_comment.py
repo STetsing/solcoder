@@ -112,7 +112,8 @@ else:
     dataset = load_dataset("Pipper/sol_processed_s2s")
     print('Info: loaded preprocessed set from hugginface space!')
     dataset = dataset.map(process_samples, batched=True, batch_size=8, num_proc=56)
-
+    dataset.push_to_hub("Pipper/sol_processed_s2s", token=os.environ.get("HF_TOKEN"))
+    
 train_set = dataset['train']
 eval_set = dataset['valid']
 
