@@ -18,7 +18,7 @@ device = Accelerator.device
 print('INFO: Computing device is:', device)
 
 metric = evaluate.load('rouge')
-process_local = True
+process_local = False
 
 def compute_metrics(eval_preds):
     preds, labels = eval_preds
@@ -37,13 +37,13 @@ def compute_metrics(eval_preds):
     return result
 
 
-base_model = "Pipper/SolCoder"
+base_model = "Salesforce/codet5-base"
 sol_tok_model = "Pipper/SolCoder"
 tokenizer = RobertaTokenizer.from_pretrained(base_model)
 model = T5ForConditionalGeneration.from_pretrained(base_model)
 
-max_input_length = 512
-max_target_length = 1024
+max_input_length = 150
+max_target_length = 256
 prefix = "Generate Solidity: "
 
 def strip_comment(com):
@@ -53,6 +53,7 @@ def strip_comment(com):
     com = com.replace('@notice','').strip()
     com = com.replace('@dev','').strip()
     com = com.replace('@param','').strip()
+    com = com.replace('#','').strip()
     com = com.replace('@return','return').strip()
     return com
 
@@ -62,7 +63,7 @@ def process_samples(samples):
     codes = samples['code_string']
     comments = samples['comments']
 
-    inputs = [prefix + strip_comment(cm) for cm in comments]
+    inputs = [strip_comment(cm) for cm in comments]
     model_inputs = tokenizer(inputs, max_length=max_input_length, padding="max_length", truncation=True)
 
     # encode the summaries
@@ -87,7 +88,7 @@ if process_local:
         df = pd.read_pickle(data_path)
         dataset = Dataset.from_pandas(df)
         del df
-        dataset = dataset.map(process_samples, batched=True, batch_size=8, num_proc=50)
+        dataset = dataset.map(process_samples, batched=True, batch_size=8, num_proc=15)
         dataset = dataset.train_test_split(test_size=0.1)
         test_valid = dataset['test'].train_test_split(test_size=0.5)
 
@@ -109,21 +110,40 @@ if process_local:
         print('Info: loaded preprocessed set from disk!')
 else: 
     print('Info: loading preprocessed set from hugginface space...')
-    dataset = load_dataset("Pipper/sol_processed_s2s")
+    dataset = load_dataset("Pipper/sol_processed_s2s", revision='99aeaf435119cbffb6b6191ed65e42c3a7b28126')
     print('Info: loaded preprocessed set from hugginface space!')
-    dataset = dataset.map(process_samples, batched=True, batch_size=8, num_proc=56)
-    dataset.push_to_hub("Pipper/sol_processed_s2s", token=os.environ.get("HF_TOKEN"))
+    dataset = dataset.map(process_samples, batched=True, batch_size=8, num_proc=60)
+    print(dataset) 
+    print(tokenizer.decode(dataset['train'][0]['input_ids'], skip_special_tokens=True))
+    preds = dataset['train'][0]['labels']
+    preds = np.where(np.array(preds) != -100, preds, tokenizer.pad_token_id)
+    print(tokenizer.decode(preds, skip_special_tokens=True))
+
     
+    dataset = dataset['train'].train_test_split(test_size=0.1, seed=100)
+    test_valid = dataset['test'].train_test_split(test_size=0.5, seed=100)
+
+    dataset = DatasetDict({
+                                    'train': dataset['train'],
+                                    'test': test_valid['test'],
+                                    'valid': test_valid['train']
+                                    })
+
+
+    #dataset.push_to_hub("Pipper/sol_processed_s2s", token=os.environ.get("HF_TOKEN"), revision='cleaned', branch='cleaned', max_shard_size="1G")
+    #print('INFO: pushed data to the hub')
+    #sys.exit(1)
+
 train_set = dataset['train']
 eval_set = dataset['valid']
 
 training_args = Seq2SeqTrainingArguments(
     "SolCoder",
     evaluation_strategy='epoch', 
-    learning_rate=1e-4, 
-    per_device_eval_batch_size=2,
-    per_device_train_batch_size=2,
-    num_train_epochs=30,
+    learning_rate=1e-4,
+    per_device_eval_batch_size=37,
+    per_device_train_batch_size=37,
+    num_train_epochs=20,
     push_to_hub=False,
     save_total_limit=2,
     load_best_model_at_end=True,
@@ -149,4 +169,4 @@ trainer.train()
 tokenizer.save_pretrained('./trained_model_last_epoch')
 trainer.save_model('./trained_model_last_epoch')
 
-trainer.push_to_hub(commit_message="training comment 2 code done"+datetime.now.strftime("%m/%d/%Y, %H:%M:%S"))
+trainer.push_to_hub(commit_message="training latge t5 comment 2 code done "+datetime.now.strftime("%m/%d/%Y, %H:%M:%S"))
