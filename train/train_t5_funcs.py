@@ -81,9 +81,9 @@ def process_samples(samples):
     return model_inputs
 
 if process_local:
-    if not os.path.exists('./sol_dataset'):
+    if not os.path.exists('./sol_funcs'):
         print('INFO: loading dataset for the first time ...')
-        os.makedirs('./sol_dataset', exist_ok=True)
+        os.makedirs('./sol_funcs', exist_ok=True)
         data_path = 'filtered_comment_code_sol.pkl'
         df = pd.read_pickle(data_path)
         dataset = Dataset.from_pandas(df)
@@ -98,19 +98,19 @@ if process_local:
                                     'valid': test_valid['train']
                                     })
 
-        split_dataset.save_to_disk('./sol_dataset')
+        split_dataset.save_to_disk('./sol_funcs')
         
         # also push dataset to repo
-        split_dataset.push_to_hub("Pipper/sol_processed_s2s", token=os.environ.get("HF_TOKEN"))
-        print('Info: Pushed preprocessed data to hub')
+        # split_dataset.push_to_hub("Pipper/sol_processed_s2s", token=os.environ.get("HF_TOKEN"))
+        # print('Info: Pushed preprocessed data to hub')
 
     else:
         print('Info: loading preprocessed set from disk...')
-        dataset = load_from_disk('./sol_dataset', keep_in_memory=True)
+        dataset = load_from_disk('./sol_funcs', keep_in_memory=True)
         print('Info: loaded preprocessed set from disk!')
 else: 
     print('Info: loading preprocessed set from hugginface space...')
-    dataset = load_dataset("Pipper/sol_processed_s2s", revision='99aeaf435119cbffb6b6191ed65e42c3a7b28126')
+    dataset = load_dataset("Pipper/SolFuncs")
     print('Info: loaded preprocessed set from hugginface space!')
     dataset = dataset.map(process_samples, batched=True, batch_size=8, num_proc=60)
     print(dataset) 
