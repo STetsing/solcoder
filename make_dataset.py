@@ -6,6 +6,7 @@ import pandas as pd
 from tqdm import tqdm
 from datasets import load_dataset
 from solidity_parser.parser import prettify, get_file_content, fragment_code
+from solidity_parser.gpt_parser import *
 from utils.parallel import parallelize_on_rows
 from pandarallel import pandarallel
 
@@ -86,7 +87,7 @@ def process_file(row):
     if enable_pretty:
         prettify(row['sol_file'])
 
-    code_and_comment = fragment_code(get_file_content(row['sol_file']))
+    code_and_comment = extract_comment_code_pairs(get_file_content(row['sol_file']))
 
     for cm, cd in code_and_comment:
         cm = clean_comment(cm)
