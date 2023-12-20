@@ -12,7 +12,7 @@ model = T5ForConditionalGeneration.from_pretrained(model_path).to(device)
 
 def infer(comment, max_new_tokens=200, temperature=0.9, sample=False):
     input_ids = tokenizer(comment, return_tensors='pt').input_ids
-    outputs = model.generate(input_ids, max_new_tokens=max_new_token, temperature=temperature, do_sample=sample)
+    outputs = model.generate(input_ids, max_new_tokens=max_new_tokens, temperature=temperature, do_sample=sample)
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
 
