@@ -16,15 +16,22 @@ def infer(comment, max_new_tokens=200, temperature=0.9, sample=False):
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
 
+# app = gr.Interface(
+#     fn=infer,
+#     inputs=["text", gr.Slider(0, 500), gr.Slider(0, 1), "checkbox"],
+#     outputs=["text"],
+#     allow_flagging="manual",
+#     flagging_options=["wrong answer", "off topic"]
+# )
 
 app = gr.ChatInterface(
     fn=infer,
-    inputs=["text", gr.Slider(0, 500), gr.Slider(0, 1), "checkbox"],
-    outputs=["text"],
-    allow_flagging="manual",
-    flagging_options=["wrong answer", "off topic"]
+    additional_inputs=["text", gr.Slider(0, 500), gr.Slider(0, 1), "checkbox"],
 )
 app.launch()
+
+if __name__ == "__main__":
+    app.launch()
 
 # demo = gr.ChatInterface(random_response)
 
