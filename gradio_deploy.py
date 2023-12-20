@@ -18,7 +18,7 @@ def infer(comment, max_new_tokens=200, temperature=0.9, sample=False):
 
 app = gr.Interface(
     fn=infer,
-    inputs=["text", gr.Slider(0, 500), gr.Slider(0, 1), "checkbox"],
+    inputs=["text", gr.Slider(0, 500,100), gr.Slider(0, 1, 0.8), "checkbox"],
     outputs=["text"],
     allow_flagging="manual",
     flagging_options=["wrong answer", "off topic"]
