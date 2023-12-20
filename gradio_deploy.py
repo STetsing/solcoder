@@ -17,10 +17,12 @@ def infer(comment, max_new_tokens=200, temperature=0.9, sample=False):
 
 
 
-app = gr.Interface(
+app = gr.ChatInterface(
     fn=infer,
     inputs=["text", gr.Slider(0, 500), gr.Slider(0, 1), "checkbox"],
     outputs=["text"],
+    allow_flagging="manual",
+    flagging_options=["wrong answer", "off topic"]
 )
 app.launch()
 
