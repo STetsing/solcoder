@@ -22,4 +22,4 @@ torch==2.1.0
 torchvision==0.16.0
 tqdm==4.65.0
 transformers==4.33.0
-transformers-onnx==0.0.2
+fsspec==2023.9.2
