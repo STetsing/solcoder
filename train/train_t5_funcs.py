@@ -104,14 +104,16 @@ if process_local:
         # print('Info: Pushed preprocessed data to hub')
 
     else:
-        print('Info: loading preprocessed set from disk...')
+        print('INFO: loading preprocessed set from disk...')
         dataset = load_from_disk('./sol_funcs', keep_in_memory=True)
-        print('Info: loaded preprocessed set from disk!')
+        print('INFO: loaded preprocessed set from disk!')
 else: 
-    print('Info: loading preprocessed set from hugginface space...')
+    print('INFO: loading preprocessed set from hugginface space...')
     dataset = load_dataset("Pipper/SolFuncs")
-    print('Info: loaded preprocessed set from hugginface space!')
+    print('INFO: loaded preprocessed set from hugginface space!')
     dataset = dataset.map(process_samples, batched=True, batch_size=8, num_proc=50)
+
+    print('INFO: Test tokenized inputs')
     print(dataset) 
     print(tokenizer.decode(dataset['train'][0]['input_ids'], skip_special_tokens=True))
     preds = dataset['train'][0]['labels']
