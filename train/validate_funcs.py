@@ -32,22 +32,17 @@ def strip_comment(com):
 def process_samples(samples):
     codes = samples['code_string']
     comments = samples['comments']
-
     inputs = [strip_comment(cm) for cm in comments]
     model_inputs = tokenizer(inputs, max_length=max_input_length, padding="max_length", truncation=True)
-
     # encode the summaries
     labels = tokenizer(codes, max_length=max_target_length, padding="max_length", truncation=True, return_overflowing_tokens=True).input_ids
-
     # important: we need to replace the index of the padding tokens by -100
     # such that they are not taken into account by the CrossEntropyLoss
     labels_with_ignore_index = []
     for labels_example in labels:
         labels_example = [label if label != 0 else -100 for label in labels_example]
         labels_with_ignore_index.append(labels_example)
-    
     model_inputs["labels"] = labels_with_ignore_index
-
     return model_inputs
 
 def compute_metrics_2(preds, labels):
@@ -58,13 +53,14 @@ def compute_metrics_2(preds, labels):
     result = metric.compute(predictions=[decoded_preds], references=[decoded_labels], use_stemmer=True)
     return result 
 
-def infer(sample):
-    comment = sample['comments']
-    input_ids = tokenizer(comment, return_tensors='pt').to(device)
-    generated_ids = model.generate(**input_ids, max_new_tokens=max_target_length)
+def infer(samples):
+    comments = samples['comments']
+    inputs = [strip_comment(cm) for cm in comments]
+    model_inputs = tokenizer(list(inputs), max_length=max_input_length, padding="max_length", truncation=True, return_tensors="pt").input_ids
+    generated_ids = model.generate(model_inputs, max_new_tokens=max_target_length)
     generated_text = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
-    sample['generated_text'] = generated_text
-    return sample
+    samples['generated_text'] = generated_text
+    return samples
 
 def get_metric(sample):
     sample['rouge'] = metric.compute(predictions=[sample['generated_text']], references=[sample['code_string']], use_stemmer=True)
