@@ -37,8 +37,7 @@ def compute_metrics(eval_preds):
     return result
 
 
-base_model = "Salesforce/codet5-base"
-sol_tok_model = "Pipper/SolCoder"
+base_model = "Salesforce/codet5p-220m"
 tokenizer = RobertaTokenizer.from_pretrained(base_model)
 model = T5ForConditionalGeneration.from_pretrained(base_model)
 
@@ -112,7 +111,7 @@ else:
     print('Info: loading preprocessed set from hugginface space...')
     dataset = load_dataset("Pipper/SolFuncs")
     print('Info: loaded preprocessed set from hugginface space!')
-    dataset = dataset.map(process_samples, batched=True, batch_size=8, num_proc=60)
+    dataset = dataset.map(process_samples, batched=True, batch_size=8, num_proc=50)
     print(dataset) 
     print(tokenizer.decode(dataset['train'][0]['input_ids'], skip_special_tokens=True))
     preds = dataset['train'][0]['labels']
@@ -138,7 +137,7 @@ train_set = dataset['train']
 eval_set = dataset['valid']
 
 training_args = Seq2SeqTrainingArguments(
-    "SolCoder",
+    "SolCoderFuncs",
     evaluation_strategy='epoch', 
     learning_rate=1e-4,
     per_device_eval_batch_size=37,
