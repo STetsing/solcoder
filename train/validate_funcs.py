@@ -67,7 +67,7 @@ def get_metric(sample):
     return sample
 
 
-small_ds = small_ds.map(process_samples, batched=True, batch_size=8, num_proc=50).map(infer)
+small_ds = small_ds.map(process_samples, batched=True, batch_size=8, num_proc=1).map(infer)
 small_ds = small_ds.map(get_metric)
 
 rouge_results = pd.DataFrame(small_ds['rouge'])
