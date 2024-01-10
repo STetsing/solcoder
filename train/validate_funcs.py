@@ -5,10 +5,10 @@ import numpy as np
 import pandas as pd
 import evaluate
 import torch
-device = "cuda" if torch.cuda.is_available() else 'cpu'
+device = "cuda" if torcnh.cuda.is_available() else 'cpu'
 
 base_model = "Pipper/SolCoderFuncs"
-metric = evaluate.load('rouge')
+metric = evaluate.load('rouge', 'bleu')
 tokenizer = RobertaTokenizer.from_pretrained(base_model)
 model = T5ForConditionalGeneration.from_pretrained(base_model).to(device)
 
@@ -56,7 +56,7 @@ def compute_metrics_2(preds, labels):
 def infer(samples):
     comments = samples['comments']
     inputs = [strip_comment(cm) for cm in comments]
-    model_inputs = tokenizer(list(inputs), max_length=max_input_length, padding="max_length", truncation=True, return_tensors="pt").input_ids
+    model_inputs = tokenizer(list(inputs), max_length=max_input_length, padding="max_length", truncation=True, return_tensors="pt").input_ids.to(device)
     generated_ids = model.generate(model_inputs, max_new_tokens=max_target_length)
     generated_text = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
     samples['generated_text'] = generated_text
