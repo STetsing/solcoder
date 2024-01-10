@@ -13,7 +13,7 @@ from pandarallel import pandarallel
 
 enable_pretty = False
 
-pandarallel.initialize(progress_bar=True, nb_workers=9)
+pandarallel.initialize(progress_bar=True, nb_workers=32)
 tqdm.pandas()
 pd.options.mode.copy_on_write = True
 
@@ -113,7 +113,7 @@ print('\nINFO: Processing sourcify data')
 
 
 print('\nINFO: appending sourcify results')
-step = 1000
+step = 5000
 for i in range(0, len(sourcify_contracts), step):
     print('\nINFO: processing sourcify batch', i)
     small_set = sourcify_contracts[i: i+step]

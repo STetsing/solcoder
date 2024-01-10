@@ -53,7 +53,10 @@ def apply_filter(dataset):
     dataset=dataset[dataset['code_string'].apply(lambda x: has_no_license(x))]
     dataset = dataset.drop_duplicates(subset=['code_string'], keep='first')
     dataset = dataset.drop_duplicates(subset=['comments'], keep='first')
+    dataset = dataset.drop_duplicates(subset=['context'], keep='first')
     dataset['comments']=dataset['comments'].apply(lambda x: strip_comment(x))
+    dataset['context'] = dataset['context'].apply(lambda x: remove_comments_from_context(x))
+
     print("INFO: Filtering dataset after all filters:", len(dataset))
     return dataset
 
