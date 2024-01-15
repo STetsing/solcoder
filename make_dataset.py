@@ -13,7 +13,7 @@ from pandarallel import pandarallel
 
 enable_pretty = False
 
-pandarallel.initialize(progress_bar=True, nb_workers=32)
+pandarallel.initialize(progress_bar=True, nb_workers=30)
 tqdm.pandas()
 pd.options.mode.copy_on_write = True
 
@@ -22,7 +22,10 @@ contracts_dirs_saved = './slither_processed_contracts.pkl'
 sourcify_contracts = pd.read_pickle(contracts_dirs_saved)
 sourcify_contracts = sourcify_contracts.drop([ 'slither_processed', 'contracts_dirs','has_src_files', 'slither'], axis=1)
 print('INFO: length Sourcify solidity dataset:', len(sourcify_contracts))
+
+
 temp = './temp/'
+os.makedirs(temp, exist_ok=True)
 
 # load starcoder solidity dataset
 starcoder_df = pd.DataFrame(load_dataset("bigcode/the-stack-dedup", data_dir="data/solidity", split="train", trust_remote_code=True))
@@ -113,7 +116,7 @@ print('\nINFO: Processing sourcify data')
 
 
 print('\nINFO: appending sourcify results')
-step = 5000
+step = 3000
 for i in range(0, len(sourcify_contracts), step):
     print('\nINFO: processing sourcify batch', i)
     small_set = sourcify_contracts[i: i+step]
@@ -163,20 +166,20 @@ for i in range(0, len(starcoder_df), step):
 print('\nINFO: writing dataset to disk')
 bigset = pd.DataFrame()
 
-for i, f in tqdm(enumerate(os.listdir('./data/'))):
-    if '.pkl' not in f:
-        continue
-    df = pd.read_pickle(os.path.join('./data/', f))
-    bigset = pd.concat([bigset, df])
-    os.remove(os.path.join('./data/', f))
+# for i, f in tqdm(enumerate(os.listdir('./data/'))):
+#     if '.pkl' not in f:
+#         continue
+#     df = pd.read_pickle(os.path.join('./data/', f))
+#     bigset = pd.concat([bigset, df])
+#     os.remove(os.path.join('./data/', f))
 
-    if i%60==0 and i!=0:
-        # save set
-        bigset.to_pickle(f'./sets/set_{i}.pkl')
-        bigset = pd.DataFrame()
+#     if i%60==0 and i!=0:
+#         # save set
+#         bigset.to_pickle(f'./sets/set_{i}.pkl')
+#         bigset = pd.DataFrame()
 
-bigset.to_pickle(f'./sets/set_last.pkl')
-bigset = pd.DataFrame()
+# bigset.to_pickle(f'./sets/set_last.pkl')
+# bigset = pd.DataFrame()
 
 
 

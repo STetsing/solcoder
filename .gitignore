@@ -14,3 +14,6 @@ sol_dataset
 SolCoder
 __pycache__/
 *.pyc
+wandb
+slither_processed_contracts
+Sol*

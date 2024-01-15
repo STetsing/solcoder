@@ -2,27 +2,35 @@ from transformers import RobertaTokenizer, AutoTokenizer
 import re
 
 base_model = "Salesforce/codet5p-220m"
-tokenizer = RobertaTokenizer.from_pretrained(base_model)
-max_input_length = 150
+tokenizer = AutoTokenizer.from_pretrained(base_model)
+tokenizer.truncation_side = 'left'
+tokenizer.padding_side = 'right'
+max_input_length = 512
 max_target_length = 256
 
-def remove_comments_from_context(code):
-    # Regular expression to match Solidity comments (including nested comments)
-    comment_pattern = re.compile(r'\/\/.*|\/\*[\s\S]*?\*\/')
-    # Remove comments from the code
-    while re.search(comment_pattern, code):
-        code = re.sub(comment_pattern, '', code)
-
-    return code
+def strip_comment(com):
+    com = com.replace('*','').strip()
+    com = com.replace('\n','').strip()
+    com = com.replace('\t','').strip()
+    com = com.replace('  ','').strip()
+    com = com.replace('@title','').strip()
+    com = com.replace('@author','').strip()
+    com = com.replace('@notice','').strip()
+    com = com.replace('@dev','').strip()
+    com = com.replace('@param','').strip()
+    com = com.replace('#','').strip()
+    com = com.replace('@return','return').strip()
+    if com.startswith('/'):
+        com = '/' + com 
+    com = ''.join(com).strip()
+    return com
 
 def process_samples(samples):
     codes = samples['code_string']
-    context_comment = [remove_comments_from_context(sp) for sp in samples['context']]
+    context = [ctx + "\n" + strip_comment(com)for ctx, com in zip(samples['context'], samples['comments'])]
 
-    model_inputs = tokenizer(context_comment, max_length=max_input_length, padding="max_length", truncation=True)
-
-    # encode the summaries
-    labels = tokenizer(codes, max_length=max_target_length, padding="max_length", truncation=True, return_overflowing_tokens=True).input_ids
+    model_inputs = tokenizer(context, max_length=max_input_length, padding="max_length", truncation=True)
+    labels = tokenizer(codes, max_length=max_target_length, padding="max_length", truncation=False, return_overflowing_tokens=True).input_ids
 
     # important: we need to replace the index of the padding tokens by -100
     # such that they are not taken into account by the CrossEntropyLoss
