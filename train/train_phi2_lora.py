@@ -41,7 +41,7 @@ model = AutoModelForCausalLM.from_pretrained(base_model,
 model.config.use_cache = False
 model.config.pretraining_tp = 1
 model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
-model.gradient_checkpointing_enable()
+model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": True})
 
 print('INFO: Model size is', model.num_parameters()/1e9, "GB\n")
 
@@ -86,7 +86,6 @@ training_args = TrainingArguments('Phi2-SolCoder-lora',
         logging_strategy="steps",
         gradient_accumulation_steps=2, 
         eval_steps = 10,
-        gradient_checkpointing_kwargs={"use_reentrant": False},
         logging_steps=10,
         optim="paged_adamw_8bit",
         lr_scheduler_type = "cosine",
