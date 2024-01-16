@@ -34,17 +34,17 @@ dataset = dataset.map(group_texts,batch_size=50, batched=True, num_proc=30)
 # print(tokenizer.decode(dataset['train']['input_ids'][11]))
 # print('#'*100)
 # print(tokenizer.decode(dataset['train']['input_ids'][12]))
-print(len(dataset['train']['input_ids'][0]))
+# print(len(dataset['train']['input_ids'][0]))
 print("INFO: Length dataset:",len(dataset))
-# print(dataset)
+print(dataset)
 
-print('INFO: Training shape:', np.array(dataset["train"]['input_ids']).shape)
+#print('INFO: Training shape:', np.array(dataset["train"]['input_ids']).shape)
 
 training_args = TrainingArguments('Phi2-SolCoder', 
         evaluation_strategy="epoch", 
         learning_rate=1e-4, 
-        per_device_eval_batch_size=2,
-        per_device_train_batch_size=2,
+        per_device_eval_batch_size=1,
+        per_device_train_batch_size=1,
         num_train_epochs=10,
         push_to_hub=False,
         save_total_limit=2,
