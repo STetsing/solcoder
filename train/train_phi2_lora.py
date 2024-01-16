@@ -17,7 +17,7 @@ from peft import LoraConfig, prepare_model_for_kbit_training
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
 
 # single GPU
-#os.environ["CUDA_VISIBLE_DEVICES"]="0"
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 bnb_conig = BitsAndBytesConfig(
     load_in_4bit = True,
@@ -75,8 +75,8 @@ def print_trainable_parameters (model) :
 training_args = TrainingArguments('Phi2-SolCoder-lora', 
         evaluation_strategy="epoch", 
         learning_rate=2e-4, 
-        per_device_eval_batch_size=13,
-        per_device_train_batch_size=13,
+        per_device_eval_batch_size=40,
+        per_device_train_batch_size=40,
         num_train_epochs=10,
         push_to_hub=False,
         save_total_limit=2,
