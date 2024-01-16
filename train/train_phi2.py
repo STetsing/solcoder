@@ -22,12 +22,12 @@ torch.cuda.empty_cache()
 data_dir = './SolCausal'
 
 print('INFO: Loading model ...')
-model = AutoModelForCausalLM.from_pretrained(base_model, torch_dtype="auto", flash_attn=True, flash_rotary=True, fused_dense=True, trust_remote_code=True)
+model = AutoModelForCausalLM.from_pretrained(base_model, torch_dtype="auto", trust_remote_code=True)
 print('INFO: Model size is', model.num_parameters()/1e9, "GB\n")
 
 dataset = load_from_disk(data_dir) 
-dataset = dataset.map(process_sampl,batched=True, num_proc=None, remove_columns=dataset["train"].column_names,)\
-                .map(group_texts, batched=True, num_proc=30)
+dataset = dataset.map(process_samples,batched=True, num_proc=30, batch_size=100, remove_columns=dataset["train"].column_names)
+dataset = dataset.map(group_texts,batch_size=50, batched=True, num_proc=30)
 
 # print(tokenizer.decode(dataset['train']['input_ids'][10]))
 # print('#'*100)
@@ -35,13 +35,16 @@ dataset = dataset.map(process_sampl,batched=True, num_proc=None, remove_columns=
 # print('#'*100)
 # print(tokenizer.decode(dataset['train']['input_ids'][12]))
 print(len(dataset['train']['input_ids'][0]))
-print(len(dataset))
+print("INFO: Length dataset:",len(dataset))
+# print(dataset)
 
-training_args = TrainingArguments('SolCoderNew', 
+print('INFO: Training shape:', np.array(dataset["train"]['input_ids']).shape)
+
+training_args = TrainingArguments('Phi2-SolCoder', 
         evaluation_strategy="epoch", 
         learning_rate=1e-4, 
-        per_device_eval_batch_size=1,
-        per_device_train_batch_size=1,
+        per_device_eval_batch_size=2,
+        per_device_train_batch_size=2,
         num_train_epochs=10,
         push_to_hub=False,
         save_total_limit=2,
@@ -80,5 +83,5 @@ trainer = Trainer(
 
 trainer.train()
 
-tokenizer.save_pretrained('./SolCoderNew')
-trainer.save_model('./SolCoderNew')
+tokenizer.save_pretrained('./Phi2-SolCoder')
+trainer.save_model('./Phi2-SolCoder')
