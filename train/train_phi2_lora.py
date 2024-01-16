@@ -76,7 +76,7 @@ training_args = TrainingArguments('SolCoderNew',
         seed=100)
 
 peft_config = LoraConfig(
-    r = 32, 
+    r = 16, 
     lora_alpha = 64, 
     lora_dropout = 0.05,
     bias = "none",
