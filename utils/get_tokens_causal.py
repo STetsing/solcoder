@@ -2,7 +2,7 @@ from transformers import RobertaTokenizer, AutoTokenizer
 import re
 
 base_model = "microsoft/phi-2"
-tokenizer = AutoTokenizer.from_pretrained(base_model)
+tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True)
 tokenizer.pad_token = tokenizer.eos_token
 block_size = 64
 
