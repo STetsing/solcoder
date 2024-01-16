@@ -51,8 +51,8 @@ dataset = dataset.map(group_texts, batch_size=50, batched=True, num_proc=30)
 # print(tokenizer.decode(dataset['train']['input_ids'][11]))
 # print('#'*100)
 # print(tokenizer.decode(dataset['train']['input_ids'][12]))
-print(len(dataset['train']['input_ids'][0]))
-print(len(dataset))
+print("INFO: Length dataset:",len(dataset))
+print(dataset)
 
 training_args = TrainingArguments('SolCoderNew', 
         evaluation_strategy="epoch", 
