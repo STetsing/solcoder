@@ -73,7 +73,6 @@ training_args = TrainingArguments('SolCoderNew',
         lr_scheduler_type = "cosine",
         warmup_ratio = 0.05,
         weight_decay = 0.01,
-        load_best_model_at_end=True,
         seed=100)
 
 peft_config = LoraConfig(
