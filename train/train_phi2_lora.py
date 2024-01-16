@@ -81,7 +81,7 @@ perf_config = LoraConfig(
     lora_dropout = 0.05,
     bias_type = None,
     task_type = "Causal_lm",
-    target_modules = ["Wqkv", "fc1", "fc2" ]
+    target_modules = ["Wqkv", "fc1", "fc2" ], #'q_proj', 'k_proj', 'v_proj','dense','fc1','fc2','embed_tokens','lm_head'
 )
 
 
