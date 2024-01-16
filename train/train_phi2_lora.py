@@ -95,6 +95,7 @@ training_args = TrainingArguments('Phi2-SolCoder-lora',
         lr_scheduler_type = "cosine",
         warmup_ratio = 0.05,
         weight_decay = 0.01,
+        ddp_find_unused_parameters=False,
         seed=100)
 
 peft_config = LoraConfig(
