@@ -54,7 +54,18 @@ dataset = load_from_disk(data_dir, keep_in_memory=True)
 print("INFO: Length dataset:",len(dataset))
 print(dataset)
 
-training_args = TrainingArguments('SolCoderNew', 
+def print_trainable_parameters (model) :
+    # Prints the number of trainable parameters in the model.
+    trainable_params = 0
+    all_param = 0
+    for _, param in model.named_parameters ( ):
+        all_param += param .numel ( )
+        if param. requires_grad:
+            trainable_params += param. numel ()
+    print(f'trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param}")
+
+
+training_args = TrainingArguments('Phi2-SolCoder-lora', 
         evaluation_strategy="epoch", 
         learning_rate=2e-4, 
         per_device_eval_batch_size=10,
@@ -114,7 +125,8 @@ trainer = SFTTrainer(
     data_collator=data_collator # very important, does the label shifting by 1
 )
 
+print_trainable_parameters(model)
 trainer.train()
 
-tokenizer.save_pretrained('./SolCoderNew')
-trainer.save_model('./SolCoderNew')
+tokenizer.save_pretrained('./Phi2-SolCoder-lora')
+trainer.save_model('./Phi2-SolCoder-lora')
