@@ -75,8 +75,8 @@ def print_trainable_parameters (model) :
 training_args = TrainingArguments('Phi2-SolCoder-lora', 
         evaluation_strategy="epoch", 
         learning_rate=2e-4, 
-        per_device_eval_batch_size=50,
-        per_device_train_batch_size=50,
+        per_device_eval_batch_size=130,
+        per_device_train_batch_size=130,
         num_train_epochs=10,
         push_to_hub=False,
         save_total_limit=2,
@@ -128,7 +128,6 @@ trainer = SFTTrainer(
     #callbacks=[PerplexCallback],
     peft_config = peft_config,
     max_seq_length = 512,
-    packing=True,
     #compute_metrics=compute_metrics,
     data_collator=data_collator # very important, does the label shifting by 1
 )
