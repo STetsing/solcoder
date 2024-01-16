@@ -40,8 +40,8 @@ model = AutoModelForCausalLM.from_pretrained(base_model,
                     trust_remote_code=True)
 model.config.use_cache = False
 model.config.pretraining_tp = 1
-model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=False)
-model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
+model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
+model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": True})
 
 print('INFO: Model size is', model.num_parameters()/1e9, "GB\n")
 
