@@ -17,7 +17,7 @@ from peft import LoraConfig, prepare_model_for_kbit_training
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
 
 # single GPU
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+# os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 bnb_conig = BitsAndBytesConfig(
     load_in_4bit = True,
