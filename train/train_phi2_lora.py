@@ -82,6 +82,7 @@ peft_config = LoraConfig(
     lora_dropout = 0.05,
     bias = "none",
     task_type = "CAUSAL_LM",
+    max_seq_length = 2048,
     target_modules = ["Wqkv", "fc1", "fc2" ], #'q_proj', 'k_proj', 'v_proj','dense','fc1','fc2','embed_tokens','lm_head'
 )
 
