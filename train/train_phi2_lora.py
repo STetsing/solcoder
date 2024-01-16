@@ -42,6 +42,9 @@ model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
 print('INFO: Model size is', model.num_parameters()/1e9, "GB\n")
 
 dataset = load_from_disk(data_dir, keep_in_memory=True) 
+dataset['train'] = dataset['train'].select(np.arange(0, 1000, 1))
+dataset['valid'] = dataset['valid'].select(np.arange(0, 1000, 1))
+dataset['test'] = dataset['test'].select(np.arange(0, 1000, 1))
 #dataset = dataset.map(process_samples, batched=True, num_proc=30, batch_size=100, remove_columns=dataset["train"].column_names)
 #dataset = dataset.map(group_texts, batch_size=50, batched=True, num_proc=30)
 
