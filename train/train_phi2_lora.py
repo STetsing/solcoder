@@ -81,7 +81,7 @@ peft_config = LoraConfig(
     lora_dropout = 0.05,
     bias = "none",
     task_type = "CAUSAL_LM",
-    target_modules = ["Wqkv", "fc1", "fc2" ], #'q_proj', 'k_proj', 'v_proj','dense','fc1','fc2','embed_tokens','lm_head'
+    target_modules = ["Wqkv", "fc1", "fc2"], #, 'q_proj', 'k_proj', 'v_proj','dense','fc1','fc2','embed_tokens','lm_head'],
 )
 
 
@@ -110,7 +110,6 @@ trainer = SFTTrainer(
     #callbacks=[PerplexCallback],
     peft_config = peft_config,
     max_seq_length = 2048,
-    packing=True,
     #compute_metrics=compute_metrics,
     data_collator=data_collator # very important, does the label shifting by 1
 )
