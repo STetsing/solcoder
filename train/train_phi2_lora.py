@@ -14,7 +14,7 @@ from transformers import DataCollatorForLanguageModeling, BitsAndBytesConfig, Hf
 from accelerate import Accelerator
 from utils.get_tokens_causal import *
 from peft import LoraConfig, prepare_model_for_kbit_training
-from trl import SFTTrainer
+from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
 
 bnb_conig = BitsAndBytesConfig(
     load_in_4bit = True,
@@ -42,8 +42,8 @@ model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
 print('INFO: Model size is', model.num_parameters()/1e9, "GB\n")
 
 dataset = load_from_disk(data_dir) 
-dataset = dataset.map(process_samples, batched=True, num_proc=30, batch_size=100, remove_columns=dataset["train"].column_names)
-dataset = dataset.map(group_texts, batch_size=50, batched=True, num_proc=30)
+#dataset = dataset.map(process_samples, batched=True, num_proc=30, batch_size=100, remove_columns=dataset["train"].column_names)
+#dataset = dataset.map(group_texts, batch_size=50, batched=True, num_proc=30)
 
 
 # print(tokenizer.decode(dataset['train']['input_ids'][10]))
@@ -81,7 +81,7 @@ peft_config = LoraConfig(
     lora_alpha = 64, 
     lora_dropout = 0.05,
     bias = "none",
-    task_type = "Causal_lm",
+    task_type = "CAUSAL_LM",
     target_modules = ["Wqkv", "fc1", "fc2" ], #'q_proj', 'k_proj', 'v_proj','dense','fc1','fc2','embed_tokens','lm_head'
 )
 
@@ -105,7 +105,8 @@ trainer = SFTTrainer(
     args=training_args, 
     train_dataset=dataset['train'], 
     eval_dataset=dataset['valid'], 
-    callbacks=[PerplexCallback],
+    dataset_text_field = 'source_code',
+    #callbacks=[PerplexCallback],
     peft_config = peft_config,
     #compute_metrics=compute_metrics,
     data_collator=data_collator # very important, does the label shifting by 1
