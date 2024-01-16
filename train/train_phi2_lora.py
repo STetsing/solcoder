@@ -71,7 +71,7 @@ training_args = TrainingArguments('SolCoderNew',
         logging_steps=500,
         optim="paged_adamw_8bit",
         lr_scheduler_type = "cosine",
-        warmupo_ratio = 0.05,
+        warmup_ratio = 0.05,
         weight_decay = 0.01,
         fp16=True,
         seed=100)
@@ -80,7 +80,7 @@ perf_config = LoraConfig(
     r = 32, 
     lora_alpha = 64, 
     lora_dropout = 0.05,
-    bias_type = None,
+    bias = "none",
     task_type = "Causal_lm",
     target_modules = ["Wqkv", "fc1", "fc2" ], #'q_proj', 'k_proj', 'v_proj','dense','fc1','fc2','embed_tokens','lm_head'
 )
