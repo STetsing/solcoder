@@ -16,6 +16,9 @@ from utils.get_tokens_causal import *
 from peft import LoraConfig, prepare_model_for_kbit_training
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
 
+# single GPU
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
+
 bnb_conig = BitsAndBytesConfig(
     load_in_4bit = True,
     bnb_4bit_quant_type = "nf4", # normalized float
@@ -123,7 +126,7 @@ trainer = accelerator.prepare(SFTTrainer(
     dataset_text_field = 'source_code',
     #callbacks=[PerplexCallback],
     peft_config = peft_config,
-    max_seq_length = 2048,
+    max_seq_length = 512,
     #compute_metrics=compute_metrics,
     data_collator=data_collator # very important, does the label shifting by 1
 ))
