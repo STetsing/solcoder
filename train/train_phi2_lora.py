@@ -41,6 +41,7 @@ model = AutoModelForCausalLM.from_pretrained(base_model,
                     quantization_config = bnb_conig,
                     low_cpu_mem_usage=True,
                     device_map={'':torch.cuda.current_device()},
+                    revision="refs/pr/23",
                     trust_remote_code=True)
 model.config.use_cache = False
 model.config.pretraining_tp = 1
