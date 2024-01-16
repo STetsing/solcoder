@@ -29,7 +29,7 @@ bnb_conig = BitsAndBytesConfig(
 accelerator = Accelerator()
 device = accelerator.device
 print('INFO: Computing device is:', device)
-print('INFO: Current device is:', torch.xpu.current_device())
+print('INFO: Current device is:', torch.cuda.current_device())
 
 print('INFO: Tokenizer is fast:', tokenizer.is_fast)
 torch.cuda.empty_cache()
