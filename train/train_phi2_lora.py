@@ -29,6 +29,8 @@ bnb_conig = BitsAndBytesConfig(
 accelerator = Accelerator()
 device = accelerator.device
 print('INFO: Computing device is:', device)
+print('INFO: Current device is:', torch.xpu.current_device())
+
 print('INFO: Tokenizer is fast:', tokenizer.is_fast)
 torch.cuda.empty_cache()
 data_dir = './SolCausal'
@@ -38,7 +40,7 @@ model = AutoModelForCausalLM.from_pretrained(base_model,
                     torch_dtype="auto", 
                     quantization_config = bnb_conig,
                     low_cpu_mem_usage=True,
-                    device_map={'':device},
+                    device_map={'':torch.xpu.current_device()},
                     trust_remote_code=True)
 model.config.use_cache = False
 model.config.pretraining_tp = 1
