@@ -37,6 +37,8 @@ print('INFO: Loading model ...')
 model = AutoModelForCausalLM.from_pretrained(base_model, 
                     torch_dtype="auto", 
                     quantization_config = bnb_conig,
+                    low_cpu_mem_usage=True,
+                    device_map={'':0},
                     trust_remote_code=True)
 model.config.use_cache = False
 model.config.pretraining_tp = 1
