@@ -15,7 +15,6 @@ from accelerate import Accelerator
 from utils.get_tokens_causal import *
 from peft import LoraConfig, prepare_model_for_kbit_training
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
-import torch.nn as nn
 
 # single GPU
 # os.environ["CUDA_VISIBLE_DEVICES"]="0"
@@ -132,12 +131,6 @@ trainer = SFTTrainer(
     #compute_metrics=compute_metrics,
     data_collator=data_collator # very important, does the label shifting by 1
 )
-
-if torch.cuda.device_count() > 1:
-  print("Let's use", torch.cuda.device_count(), "GPUs!")
-  model = nn.DataParallel(model)
-
-model.to(device)
 
 print_trainable_parameters(model)
 trainer.train()
