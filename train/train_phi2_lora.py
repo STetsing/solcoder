@@ -128,6 +128,7 @@ trainer = SFTTrainer(
     #callbacks=[PerplexCallback],
     peft_config = peft_config,
     max_seq_length = 512,
+    packing=True,
     #compute_metrics=compute_metrics,
     data_collator=data_collator # very important, does the label shifting by 1
 )
