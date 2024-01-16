@@ -115,7 +115,7 @@ class PerplexCallback(TrainerCallback):
         print(f"\nModel Perplexity: {math.exp(eval_results['eval_loss']):.2f}")
 
 data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer,  mlm=False)
-trainer = accelerator.prepare(SFTTrainer(
+trainer = SFTTrainer(
     model=model, 
     tokenizer=tokenizer,
     args=training_args, 
@@ -129,7 +129,7 @@ trainer = accelerator.prepare(SFTTrainer(
     max_seq_length = 512,
     #compute_metrics=compute_metrics,
     data_collator=data_collator # very important, does the label shifting by 1
-))
+)
 
 print_trainable_parameters(model)
 trainer.train()
