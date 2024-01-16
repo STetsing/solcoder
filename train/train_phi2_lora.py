@@ -103,8 +103,8 @@ training_args = TrainingArguments('Phi2-SolCoder-lora',
         seed=100)
 
 peft_config = LoraConfig(
-    r = 32, 
-    lora_alpha = 32, 
+    r = 16, 
+    lora_alpha = 64, 
     lora_dropout = 0.05,
     bias = "none",
     task_type = "CAUSAL_LM",
