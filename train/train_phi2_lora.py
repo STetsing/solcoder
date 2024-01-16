@@ -76,7 +76,7 @@ training_args = TrainingArguments('SolCoderNew',
         fp16=True,
         seed=100)
 
-perf_config = LoraConfig(
+peft_config = LoraConfig(
     r = 32, 
     lora_alpha = 64, 
     lora_dropout = 0.05,
