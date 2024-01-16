@@ -10,13 +10,13 @@ from datasets import Dataset
 from datasets import load_metric, load_from_disk 
 from transformers import AutoTokenizer
 from transformers import AutoModelForCausalLM, Trainer, TrainerCallback, TrainingArguments, T5ForConditionalGeneration
-from transformers import DataCollatorForLanguageModeling, BitsAndByteConfig, HfArgumentParser
+from transformers import DataCollatorForLanguageModeling, BitsAndBytesConfig, HfArgumentParser
 from accelerate import Accelerator
 from utils.get_tokens_causal import *
-from peft import LoraConfig, prepare_model_for_kit_training
+from peft import LoraConfig, prepare_model_for_kbit_training
 from trl import SFTTrainer
 
-bnb_conig = BitsAndByteConfig(
+bnb_conig = BitsAndBytesConfig(
     load_in_4bit = True,
     bnb_4bit_quant_type = "nf4", # normalized float
     bnb_4bit_use_double_quant=True,
@@ -37,13 +37,14 @@ model = AutoModelForCausalLM.from_pretrained(base_model,
                     trust_remote_code=True)
 model.config.use_cache = False
 model.config.pretraining_tp = 1
-model = prepare_model_for_kit_training(model, use_gradient_checkpointing=True)
+model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
 
 print('INFO: Model size is', model.num_parameters()/1e9, "GB\n")
 
 dataset = load_from_disk(data_dir) 
-dataset = dataset.map(process_sampl,batched=True, num_proc=None, remove_columns=dataset["train"].column_names,)\
-                .map(group_texts, batched=True, num_proc=30)
+dataset = dataset.map(process_samples, batched=True, num_proc=30, batch_size=100, remove_columns=dataset["train"].column_names)
+dataset = dataset.map(group_texts, batch_size=50, batched=True, num_proc=30)
+
 
 # print(tokenizer.decode(dataset['train']['input_ids'][10]))
 # print('#'*100)
@@ -71,7 +72,7 @@ training_args = TrainingArguments('SolCoderNew',
         optim="paged_adamw_8bit",
         lr_scheduler_type = "cosine",
         warmupo_ratio = 0.05,
-        weight_decay = 0.01
+        weight_decay = 0.01,
         fp16=True,
         seed=100)
 

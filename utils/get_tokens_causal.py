@@ -24,5 +24,5 @@ def group_texts(examples):
     result["labels"] = result["input_ids"].copy()
     return result
 
-def process_sampl(samples):
+def process_samples(samples):
     return tokenizer(samples["source_code"])
