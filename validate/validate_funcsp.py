@@ -11,49 +11,20 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 warnings.simplefilter("ignore")
 
-#device = "cuda" if torch.cuda.is_available() else 'cpu'
+device = "cuda" if torch.cuda.is_available() else 'cpu'
 accelerator = Accelerator()
 
 with accelerator.main_process_first():
-    base_model = "./SolExplain/checkpoint-52855"
-    tokenizer = RobertaTokenizer.from_pretrained(base_model)
+    base_model = "./SolExplain/checkpoint-287760/"
+    tokenizer = AutoTokenizer.from_pretrained(base_model)
     model = T5ForConditionalGeneration.from_pretrained(base_model)#.to(device)
 
-metric = evaluate.load('rouge', 'bleu')
+metric = evaluate.load('rouge')
 
-small_ds = dataset = load_dataset("Pipper/SolFuncs")['test']
+small_ds = dataset = load_from_disk("./SolFuncsContext_60")['test']
 #small_ds = dataset.select(np.arange(100,5000,20))
 
-max_input_length = 150
-max_target_length = 256
-
-def strip_comment(com):
-    com = com.replace('*','').strip()
-    com = com.replace('@title','').strip()
-    com = com.replace('@author','').strip()
-    com = com.replace('@notice','').strip()
-    com = com.replace('@dev','').strip()
-    com = com.replace('@param','').strip()
-    com = com.replace('#','').strip()
-    com = com.replace('@return','return').strip()
-    return com
-
-def process_samples(samples):
-    codes = samples['code_string']
-    comments = samples['comments']
-    inputs = [strip_comment(cm) for cm in comments]
-    codes = [ "Explain this function: " + c for c in codes]
-    labels = tokenizer(inputs, max_length=max_target_length, padding="max_length", truncation=True, return_overflowing_tokens=True).input_ids
-
-    model_inputs = tokenizer(codes, max_length=max_input_length, padding="max_length", truncation=True)
-    labels_with_ignore_index = []
-    for labels_example in labels:
-        labels_example = [label if label != 0 else -100 for label in labels_example]
-        labels_with_ignore_index.append(labels_example)
-    
-    model_inputs["labels"] = labels_with_ignore_index
-
-    return model_inputs
+#print(len(small_ds['input_ids'][9]))
 
 def compute_metrics_2(preds, labels):
     labels = np.where(np.array(labels) != -100, labels, tokenizer.pad_token_id)
@@ -65,7 +36,7 @@ def compute_metrics_2(preds, labels):
 
 def infer(samples):
     comments = samples['comments']
-    inputs = [strip_comment(cm) for cm in comments]
+    inputs = [cm for cm in comments]
     model_inputs = tokenizer(list(inputs), max_length=max_input_length, padding="max_length", truncation=True, return_tensors="pt").input_ids.to(device)
     generated_ids = model.generate(model_inputs, max_new_tokens=max_target_length)
     generated_text = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
@@ -78,21 +49,20 @@ def get_metric(sample):
 
 
 #small_ds = small_ds.map(process_samples, batched=True, batch_size=8metric.compute(predictions=[sample['generated_text']], references=[sample['code_string']], num_proc=32)
-small_ds = small_ds.remove_columns("file_name")
-small_ds = small_ds.remove_columns("__index_level_0__")
-dataloader = DataLoader(small_ds, batch_size=200)
+BS = 100
+dataloader = DataLoader(small_ds, batch_size=BS)
 
 model, dataloader = accelerator.prepare(model, dataloader)
 output_sequences = []
-for batch in tqdm(dataloader):
-    samples = batch
+for i in tqdm(range(0, len(small_ds), BS)):
+    batch = samples = small_ds.select(np.arange(i,i+BS,1))
     with torch.inference_mode():
-        codes = samples['code_string']
-        codes = [ "Explain this function: " + c for c in codes]
-        model_inputs = tokenizer(codes, max_length=max_input_length, padding="max_length", truncation=True, return_tensors="pt").input_ids.to(accelerator.device)
-        generated_ids = model.module.generate(model_inputs, max_new_tokens=max_target_length)
+        codes = torch.IntTensor(samples['input_ids']).to(device)
+        labels = np.where(np.array(samples['labels']) != -100, samples['labels'], tokenizer.pad_token_id)
+        generated_ids = model.generate(codes)
         generated_text = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
-        output_sequences.extend([generated_text, samples['comments']])
+        labels = tokenizer.batch_decode(labels, skip_special_tokens=True, label_pad_token_id=-100)
+        output_sequences.extend([generated_text, labels])
 
 accelerator.wait_for_everyone()
 if  accelerator.is_local_main_process:

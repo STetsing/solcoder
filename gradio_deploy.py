@@ -5,13 +5,13 @@ from tqdm import tqdm
 from transformers import T5ForConditionalGeneration, RobertaTokenizer, AutoTokenizer
 device = "cuda" if torch.cuda.is_available() else 'cpu'
 
-model_path = 'Pipper/SolCoder'
+model_path = './SolExplain/checkpoint-287760/'
 
-tokenizer = RobertaTokenizer.from_pretrained(model_path)
+tokenizer = AutoTokenizer.from_pretrained(model_path)
 model = T5ForConditionalGeneration.from_pretrained(model_path).to(device)
 
 def infer(comment, max_new_tokens=200, temperature=0.9, sample=False):
-    input_ids = tokenizer(comment, return_tensors='pt').input_ids
+    input_ids = tokenizer(comment, return_tensors='pt').input_ids.to(device)
     outputs = model.generate(input_ids, max_new_tokens=max_new_tokens, temperature=temperature, do_sample=sample)
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
 

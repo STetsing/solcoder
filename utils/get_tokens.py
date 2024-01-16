@@ -42,3 +42,10 @@ def process_samples(samples):
     model_inputs["labels"] = labels_with_ignore_index
 
     return model_inputs
+
+
+def infer(prompt, temp=0.8):
+    inputs = tokenizer(prompt, return_tensors="pt", return_attention_mask=False).to("cuda:2")
+    outputs = model.generate(**inputs, max_length=max_length, do_sample=True, temperature=temp)
+    text = tokenizer.decode(outputs[0])
+    return text.split("<|endoftext|>")[0]

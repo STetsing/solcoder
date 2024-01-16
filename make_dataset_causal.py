@@ -12,7 +12,7 @@ pd.options.mode.copy_on_write = True
 
 # Only Sol source files and 
 contracts_dirs_saved = './slither_processed_contracts.pkl'
-sourcify_contracts = pd.read_pickle(contracts_dirs_saved)[:1000]
+sourcify_contracts = pd.read_pickle(contracts_dirs_saved)
 sourcify_contracts = sourcify_contracts.drop([ 'slither_processed', 'contracts_dirs','has_src_files', 'slither'], axis=1)
 print('INFO: length Sourcify solidity dataset:', len(sourcify_contracts))
 
@@ -21,13 +21,13 @@ temp = './temp/'
 os.makedirs(temp, exist_ok=True)
 
 # load starcoder solidity dataset
-starcoder_df = pd.DataFrame(load_dataset("bigcode/the-stack-dedup", data_dir="data/solidity", split="train", trust_remote_code=True)[:1000])
+starcoder_df = pd.DataFrame(load_dataset("bigcode/the-stack-dedup", data_dir="data/solidity", split="train", trust_remote_code=True))
 starcoder_df["source_code"] = starcoder_df["content"]
 starcoder_df = starcoder_df[["source_code", "size"]]
 print('INFO: length starcoder solidity dataset:', len(starcoder_df))
 
 # load starcoder solidity dataset
-audit_con_df = pd.DataFrame(load_dataset("mwritescode/slither-audited-smart-contracts", 'all-multilabel', split="train", trust_remote_code=True)[:1000])
+audit_con_df = pd.DataFrame(load_dataset("mwritescode/slither-audited-smart-contracts", 'all-multilabel', split="train", trust_remote_code=True))
 audit_con_df = audit_con_df[["source_code"]]
 print('INFO: length audited smart contract dataset:', len(audit_con_df))
 
@@ -50,6 +50,9 @@ def clean_columns(df, keep:list):
 sourcify_contracts = sourcify_contracts[['source_code']]
 starcoder_df = starcoder_df[['source_code']]
 audit_con_df = starcoder_df[['source_code']]
+sourcify_contracts = sourcify_contracts.drop_duplicates(subset=['source_code'])
+starcoder_df = starcoder_df.drop_duplicates(subset=['source_code'])
+audit_con_df = audit_con_df.drop_duplicates(subset=['source_code'])
 
 
 dataset = concatenate_datasets([Dataset.from_pandas(sourcify_contracts), Dataset.from_pandas(starcoder_df)])
