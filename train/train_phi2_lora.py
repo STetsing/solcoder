@@ -103,7 +103,7 @@ training_args = TrainingArguments('Phi2-SolCoder-lora',
         seed=100)
 
 peft_config = LoraConfig(
-    r = 16, 
+    r = 32, 
     lora_alpha = 64, 
     lora_dropout = 0.05,
     bias = "none",
