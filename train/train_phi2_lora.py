@@ -62,7 +62,7 @@ def print_trainable_parameters (model) :
         all_param += param .numel ( )
         if param. requires_grad:
             trainable_params += param. numel ()
-    print(f'trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param}")
+    print(f"trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param}")
 
 
 training_args = TrainingArguments('Phi2-SolCoder-lora', 
