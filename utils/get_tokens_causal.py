@@ -4,7 +4,7 @@ import re
 base_model = "microsoft/phi-2"
 tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True)
 tokenizer.pad_token = tokenizer.eos_token
-block_size = 64
+block_size = 2048
 
 def group_texts(examples):
     # Concatenate all texts.
