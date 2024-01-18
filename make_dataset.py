@@ -59,7 +59,8 @@ def process_content(row, pretty=True if enable_pretty else False):
 
         for cm, cd, ctx in code_and_comment:
             cm = clean_comment(cm)
-            result.append({'context':ctx, 'comments':cm, 'code_string':''.join(cd)})
+            # result.append({'context':ctx, 'comments':cm, 'code_string':''.join(cd)})
+            result.append({'comments':cm, 'code_string':''.join(cd)})
 
         return pd.DataFrame(result)
     except Exception as ex:
@@ -105,7 +106,6 @@ def process_file(row):
 # pretify all sol files and retrieve code/comment data
 sourcify_contracts['sol_file'] = sourcify_contracts['sol_file'].progress_apply(lambda x: x.replace('/home/pippertetsing/sourcify_contract_data/', './'))
 
-print('\nINFO: Processing sourcify data')
 #sourcify_contracts['code_and_comment'] = sourcify_contracts.progress_apply(lambda x: process_file(x), axis=1)
 
 # print('\nINFO: Processing audited contract data')

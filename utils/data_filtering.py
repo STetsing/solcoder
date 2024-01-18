@@ -48,7 +48,9 @@ def remove_comments_from_context(code):
 def apply_filter(dataset):
     print("INFO: Filtering Original dataset length:", len(dataset))
     dataset=dataset[dataset['code_string'].str.len() >= 20]
+    dataset=dataset[dataset['code_string'].str.len() <= 500]
     dataset=dataset[dataset['comments'].str.len() >= 20]
+    dataset=dataset[dataset['comments'].str.len() <= 200]
     dataset=dataset[dataset['code_string'].apply(lambda x: hasMarker(x))]
     dataset=dataset[dataset['code_string'].apply(lambda x: has_no_license(x))]
     dataset = dataset.drop_duplicates(subset=['code_string'], keep='first')
