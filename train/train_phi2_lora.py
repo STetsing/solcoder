@@ -23,7 +23,7 @@ bnb_conig = BitsAndBytesConfig(
     load_in_4bit = True,
     bnb_4bit_quant_type = "nf4", # normalized float
     bnb_4bit_use_double_quant=True,
-    bnb_4bit_compute_dtype=torch.float16
+    bnb_4bit_compute_dtype=torch.bfloat16
 )
 
 accelerator = Accelerator()
@@ -99,7 +99,7 @@ training_args = TrainingArguments('Phi2-SolCoder-lora',
         seed=100)
 
 peft_config = LoraConfig(
-    r = 32, 
+    r = 16, 
     lora_alpha = 64, 
     lora_dropout = 0.05,
     bias = "none",
