@@ -40,11 +40,7 @@ model = AutoModelForCausalLM.from_pretrained(base_model,
                     torch_dtype="auto", 
                     quantization_config = bnb_conig,
                     low_cpu_mem_usage=True,
-                    flash_attn = True,
-                    flash_rotary = True,
-                    fused_dense = True,
                     device_map={'':torch.cuda.current_device()},
-                    revision="refs/pr/23",
                     trust_remote_code=True)
 model.config.use_cache = False
 model.config.pretraining_tp = 1
@@ -54,9 +50,9 @@ model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
 print('INFO: Model size is', model.num_parameters()/1e9, "GB\n")
 
 dataset = load_from_disk(data_dir, keep_in_memory=True) 
-dataset['train'] = dataset['train'].select(np.arange(0, 105000, 1))
-dataset['valid'] = dataset['valid'].select(np.arange(0, 10000, 1))
-dataset['test'] = dataset['test'].select(np.arange(0, 10000, 1))
+dataset['train'] = dataset['train'].select(np.arange(0, 10000, 1))
+dataset['valid'] = dataset['valid'].select(np.arange(0, 1000, 1))
+dataset['test'] = dataset['test'].select(np.arange(0, 1000, 1))
 #dataset = dataset.map(process_samples, batched=True, num_proc=30, batch_size=100, remove_columns=dataset["train"].column_names)
 #dataset = dataset.map(group_texts, batch_size=50, batched=True, num_proc=30)
 
@@ -83,8 +79,8 @@ def print_trainable_parameters (model) :
 training_args = TrainingArguments('Phi2-SolCoder-lora', 
         evaluation_strategy="epoch", 
         learning_rate=2e-4, 
-        per_device_eval_batch_size=13,
-        per_device_train_batch_size=13,
+        per_device_eval_batch_size=5,
+        per_device_train_batch_size=5,
         num_train_epochs=10,
         push_to_hub=False,
         save_total_limit=2,
@@ -136,7 +132,8 @@ trainer = SFTTrainer(
     dataset_text_field = 'source_code',
     #callbacks=[PerplexCallback],
     peft_config = peft_config,
-    max_seq_length = 512,
+    max_seq_length = block_size,
+    packing=True,
     #compute_metrics=compute_metrics,
     data_collator=data_collator # very important, does the label shifting by 1
 )
