@@ -6,7 +6,7 @@ import evaluate
 import math
 import torch
 import pandas as pd
-from datasets import Dataset
+from datasets import Dataset, DatasetDict
 from datasets import load_metric, load_from_disk 
 from transformers import AutoTokenizer
 from transformers import AutoModelForCausalLM, Trainer, TrainerCallback, TrainingArguments, T5ForConditionalGeneration
@@ -33,7 +33,7 @@ print('INFO: Current device is:', torch.cuda.current_device())
 
 print('INFO: Tokenizer is fast:', tokenizer.is_fast)
 torch.cuda.empty_cache()
-data_dir = './SolCausal'
+data_dir = './SolFuncsSmall'
 
 print('INFO: Loading model ...')
 model = AutoModelForCausalLM.from_pretrained(base_model, 
@@ -50,10 +50,24 @@ model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentran
 
 print('INFO: Model size is', model.num_parameters()/1e9, "GB\n")
 
-dataset = load_from_disk(data_dir, keep_in_memory=True) 
-dataset['train'] = dataset['train'].select(np.arange(0, 1000, 1))
-dataset['valid'] = dataset['valid'].select(np.arange(0, 1000, 1))
-dataset['test'] = dataset['test'].select(np.arange(0, 1000, 1))
+data_1 = pd.read_csv('./data/sourcify_0_comment_code_sol.csv')
+data_2 = pd.read_csv('./data/sourcify_10000_comment_code_sol.csv')
+data_3 = pd.read_csv('./data/sourcify_70000_comment_code_sol.csv')
+data = pd.concat([data_1, data_2, data_3])
+data['code'] = data['code_string']
+dataset = Dataset.from_pandas(data)
+train = dataset.train_test_split(test_size=0.2)
+test_valid = train['test'].train_test_split(test_size=0.5)
+
+dataset = DatasetDict({
+                        'train': train['train'],
+                        'test': test_valid['test'],
+                        'valid': test_valid['train']
+                        })
+print('INFO: The dataset', dataset)
+#dataset['train'] = dataset['train'].select(np.arange(0, 10000, 1))
+#dataset['valid'] = dataset['valid'].select(np.arange(0, 1000, 1))
+#dataset['test'] = dataset['test'].select(np.arange(0, 1000, 1))
 #dataset = dataset.map(process_samples, batched=True, num_proc=30, batch_size=100, remove_columns=dataset["train"].column_names)
 #dataset = dataset.map(group_texts, batch_size=50, batched=True, num_proc=30)
 
@@ -72,16 +86,16 @@ def print_trainable_parameters (model) :
     all_param = 0
     for _, param in model.named_parameters ( ):
         all_param += param .numel ( )
-        if param.requires_grad:
+        if param. requires_grad:
             trainable_params += param. numel ()
     print(f"trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param}")
 
 
-training_args = TrainingArguments('Phi2-SolCoder-lora', 
+training_args = TrainingArguments('Phi2-SolCoder-lora-qa2', 
         evaluation_strategy="epoch", 
         learning_rate=2e-4, 
-        per_device_eval_batch_size=100,
-        per_device_train_batch_size=100,
+        per_device_eval_batch_size=12,
+        per_device_train_batch_size=12,
         num_train_epochs=10,
         push_to_hub=False,
         save_total_limit=2,
@@ -92,6 +106,7 @@ training_args = TrainingArguments('Phi2-SolCoder-lora',
         eval_steps = 100,
         logging_steps=100,
         optim="paged_adamw_8bit",
+        gradient_accumulation_steps=5,
         lr_scheduler_type = "cosine",
         warmup_ratio = 0.05,
         weight_decay = 0.01,
@@ -120,7 +135,17 @@ class PerplexCallback(TrainerCallback):
         eval_results = trainer.evaluate()
         print(f"\nModel Perplexity: {math.exp(eval_results['eval_loss']):.2f}")
 
-data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer,  mlm=False)
+response_template = " ### Answer:"
+
+data_collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=tokenizer)
+
+def formatting_prompts_func(example):
+    output_texts = []
+    for i in range(len(example['comments'])):
+        text = f"### Question: {example['comments'][i]}\n ### Answer: {example['code'][i]}"
+        output_texts.append(text)
+    return output_texts
+
 trainer = SFTTrainer(
     model=model, 
     tokenizer=tokenizer,
@@ -129,10 +154,11 @@ trainer = SFTTrainer(
     eval_dataset=dataset['valid'], 
     dataset_num_proc = 30,
     dataset_batch_size = 100,
-    dataset_text_field = 'source_code',
+    #dataset_text_field = 'code',
     #callbacks=[PerplexCallback],
     peft_config = peft_config,
-    max_seq_length = block_size,
+    max_seq_length = 512,
+    formatting_func=formatting_prompts_func,
     #packing=True,
     #compute_metrics=compute_metrics,
     data_collator=data_collator # very important, does the label shifting by 1
@@ -141,5 +167,5 @@ trainer = SFTTrainer(
 print_trainable_parameters(model)
 trainer.train()
 
-tokenizer.save_pretrained('./Phi2-SolCoder-lora')
-trainer.save_model('./Phi2-SolCoder-lora')
+tokenizer.save_pretrained('./Phi2-SolCoder-lora-qa2')
+trainer.save_model('./Phi2-SolCoder-lora-qa2')
