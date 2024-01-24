@@ -5,8 +5,7 @@ import string
 import pandas as pd
 from tqdm import tqdm
 from datasets import load_dataset
-from solidity_parser.parser import prettify, get_file_content
-from solidity_parser.gpt_parser import *
+from solidity_parser.updated_parser import get_comments_code_blocks
 from utils.parallel import parallelize_on_rows
 from utils.data_filtering import apply_filter
 from pandarallel import pandarallel
@@ -28,13 +27,13 @@ temp = './temp/'
 os.makedirs(temp, exist_ok=True)
 
 # load starcoder solidity dataset
-starcoder_df = pd.DataFrame(load_dataset("bigcode/the-stack-dedup", data_dir="data/solidity", split="train", trust_remote_code=True))
+starcoder_df = pd.DataFrame(load_dataset("bigcode/the-stack-dedup", data_dir="data/solidity", split="train"))
 starcoder_df["source_code"] = starcoder_df["content"]
 starcoder_df = starcoder_df[["source_code", "size"]]
 print('INFO: length starcoder solidity dataset:', len(starcoder_df))
 
 # load starcoder solidity dataset
-audit_con_df = pd.DataFrame(load_dataset("mwritescode/slither-audited-smart-contracts", 'all-multilabel', split="train", trust_remote_code=True))
+audit_con_df = pd.DataFrame(load_dataset("mwritescode/slither-audited-smart-contracts", 'all-multilabel', split="train"))
 audit_con_df = audit_con_df[["source_code"]]
 print('INFO: length audited smart contract dataset:', len(audit_con_df))
 
@@ -55,9 +54,8 @@ def process_content(row, pretty=True if enable_pretty else False):
             prettify(f_name)
 
         result = []
-        code_and_comment = extract_comment_code_pairs(f_name)
-
-        for cm, cd, ctx in code_and_comment:
+        code_and_comment = get_comments_code_blocks(f_name)
+        for cm, cd in code_and_comment:
             # result.append({'context':ctx, 'comments':cm, 'code_string':''.join(cd)})
             result.append({'comments':cm, 'code_string':''.join(cd)})
 
@@ -75,9 +73,9 @@ def process_file(row):
     if enable_pretty:
         prettify(row['sol_file'])
 
-    code_and_comment = extract_comment_code_pairs(row['sol_file'])
+    code_and_comment = get_comments_code_blocks(row['sol_file'])
 
-    for cm, cd, ctx in code_and_comment:
+    for cm, cd in code_and_comment:
         # result.append({'context':ctx, 'comments':cm, 'code_string':''.join(cd)})
         result.append({'comments':cm, 'code_string':''.join(cd)})
 
@@ -146,20 +144,6 @@ for i in range(0, len(starcoder_df), step):
 print('\nINFO: writing dataset to disk')
 bigset = pd.DataFrame()
 
-# for i, f in tqdm(enumerate(os.listdir('./data/'))):
-#     if '.pkl' not in f:
-#         continue
-#     df = pd.read_pickle(os.path.join('./data/', f))
-#     bigset = pd.concat([bigset, df])
-#     os.remove(os.path.join('./data/', f))
-
-#     if i%60==0 and i!=0:
-#         # save set
-#         bigset.to_pickle(f'./sets/set_{i}.pkl')
-#         bigset = pd.DataFrame()
-
-# bigset.to_pickle(f'./sets/set_last.pkl')
-# bigset = pd.DataFrame()
 
 
 

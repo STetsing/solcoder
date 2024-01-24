@@ -18,3 +18,5 @@ wandb
 slither_processed_contracts
 Sol*
 Phi2-SolCoder-lora*
+data*
+flagged

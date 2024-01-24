@@ -51,18 +51,14 @@ model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentran
 print('INFO: Model size is', model.num_parameters()/1e9, "GB\n")
 
 data_1 = pd.read_csv('./data/sourcify_0_comment_code_sol.csv')
-data_2 = pd.read_csv('./data/sourcify_10000_comment_code_sol.csv')
-data_3 = pd.read_csv('./data/sourcify_70000_comment_code_sol.csv')
-data = pd.concat([data_1, data_2, data_3])
+data = data_1 # pd.concat([data_1, data_2, data_3])
 data['code'] = data['code_string']
 dataset = Dataset.from_pandas(data)
 train = dataset.train_test_split(test_size=0.2)
-test_valid = train['test'].train_test_split(test_size=0.5)
 
 dataset = DatasetDict({
                         'train': train['train'],
-                        'test': test_valid['test'],
-                        'valid': test_valid['train']
+                        'valid': train['test']
                         })
 print('INFO: The dataset', dataset)
 #dataset['train'] = dataset['train'].select(np.arange(0, 10000, 1))
@@ -91,11 +87,11 @@ def print_trainable_parameters (model) :
     print(f"trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param}")
 
 
-training_args = TrainingArguments('Phi2-SolCoder-lora-qa3', 
+training_args = TrainingArguments('Phi2-SolCoder-lora-qa2', 
         evaluation_strategy="epoch", 
         learning_rate=2e-4, 
-        per_device_eval_batch_size=6,
-        per_device_train_batch_size=6,
+        per_device_eval_batch_size=12,
+        per_device_train_batch_size=12,
         num_train_epochs=10,
         push_to_hub=False,
         save_total_limit=2,
@@ -140,7 +136,7 @@ response_template = " ### Answer:"
 data_collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=tokenizer)
 
 def formatting_prompts_func(example):
-    text = f"### Solidity Instruction: {example['comments']}\n ### Answer: {example['code']}"
+    text = f"### Question: {example['comments']}\n ### Answer: {example['code']}"
     return text 
 
 trainer = SFTTrainer(
@@ -162,11 +158,7 @@ trainer = SFTTrainer(
 )
 
 print_trainable_parameters(model)
-loader = trainer.get_train_dataloader()
-for b in loader:
-    break
-print('Train batch shape is:', b['input_ids'].shape)
-trainer.train()
+#trainer.train()
 
-tokenizer.save_pretrained('./Phi2-SolCoder-lora-qa3')
-trainer.save_model('./Phi2-SolCoder-lora-qa3')
+#tokenizer.save_pretrained('./Phi2-SolCoder-lora-qa2')
+#trainer.save_model('./Phi2-SolCoder-lora-qa2')

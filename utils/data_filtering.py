@@ -79,15 +79,12 @@ def remove_extra_newlines(code):
 
 def apply_filter(dataset):
     print("INFO: Filtering Original dataset length:", len(dataset))
-    dataset=dataset[dataset['code_string'].apply(lambda x: hasMarker(x))]
-    dataset=dataset[dataset['code_string'].apply(lambda x: has_no_license(x))]
-    dataset['code_string'] = dataset['code_string'].apply(lambda x: remove_comments_from_code(x))
-    dataset['code_string'] = dataset['code_string'].apply(lambda x: remove_extra_newlines(x))
+    dataset=dataset[dataset['comments'] != ""]
+    dataset=dataset[dataset['code_string'] != ""]
     dataset = dataset.drop_duplicates(subset=['code_string'], keep='first')
     dataset = dataset.drop_duplicates(subset=['comments'], keep='first')
     dataset['comments']=dataset['comments'].apply(lambda x: rm_docstring(x))
     dataset['comments']=dataset['comments'].apply(lambda x: strip_comment(x))
-    dataset = filter_rows_by_word_count(dataset, 'code_string', 30, 100)
 
     print("INFO: Filtering dataset after all filters:", len(dataset))
     return dataset

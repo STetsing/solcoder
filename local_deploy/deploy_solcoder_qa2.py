@@ -60,7 +60,7 @@ class StoppingCriteriaSub(StoppingCriteria):
         return False
 
 def stopping_criteria():
-    stop_words = ["\nQuestion:", "}\n", "User:", "INSTRUCTION", "INPUT:", "A:"]
+    stop_words = ["\nQuestion:", "}\n", "User:", "INSTRUCTION:", "INPUT:", "A:", "Instruction:", "Output:"]
     stop_words_ids = [tokenizer(stop_word, return_tensors='pt')['input_ids'].squeeze() for stop_word in stop_words]
     print('Stop ids:', stop_words_ids)
     stopping_criteria = StoppingCriteriaList([StoppingCriteriaSub(stops=stop_words_ids)])

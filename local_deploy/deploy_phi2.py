@@ -8,21 +8,19 @@ import gradio as gr
 from threading import Thread
 
 
-device = "cuda:0" if torch.cuda.is_available() else 'cpu'
+device = "cuda:3" if torch.cuda.is_available() else 'cpu'
 
-model_path = './Phi2-SolCoder-lora-qa2'
-
+model_path = "microsoft/phi-2"
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 model = AutoModelForCausalLM.from_pretrained(model_path,
-                                            load_in_4bit=True,
+                                            #load_in_4bit=True,
                                             trust_remote_code=True,
                                             device_map=device)
 
 print(model.get_memory_footprint()/1e9)
-model =  PeftModel.from_pretrained(model, model_path)
-model = model.merge_and_unload()
-print(model.get_memory_footprint()/1e9)
-
+#model =  PeftModel.from_pretrained(model, model_path)
+#model = model.merge_and_unload()
+#print(model.get_memory_footprint()/1e9)
 
 def is_tensor_at_end(main_tensor, sub_tensor):
     # Convert scalar tensor to tensor
@@ -67,33 +65,19 @@ def stopping_criteria():
     stopping_criteria = StoppingCriteriaList([StoppingCriteriaSub(stops=stop_words_ids)])
     return stopping_criteria
 
-# class StopOnTokens(StoppingCriteria):
-#     def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs) -> bool:
-#         stop_ids = [29, 0]
-#         for stop_id in stop_ids:
-#             if input_ids[0][-1] == stop_id:
-#                 return True
-#         return False
-
-def predict(message, history):
-
-    history_transformer_format = history + [[message, ""]]
+def infer(comment, mnt=200, temp=0.8):
     stop = stopping_criteria()
-
-    messages = "".join(["".join(["### Question: // Write in solidity "+item[0], "\nAnswer:"+item[1]])  #curr_system_message +
-                for item in history_transformer_format])
-
-    # model_inputs = tokenizer([messages], return_tensors="pt").to(device)
-    model_inputs = tokenizer([messages], return_tensors="pt").to(device)
+    comment = "### Question: // Write in solidity "+ comment + "\nAnswer:\n"
+    model_inputs = tokenizer([comment], return_tensors="pt").to(device)
     streamer = TextIteratorStreamer(tokenizer, timeout=10., skip_prompt=True, skip_special_tokens=True)
     generate_kwargs = dict(
         model_inputs,
         streamer=streamer,
-        max_new_tokens=200,
+        max_new_tokens=mnt,
         do_sample=True,
         top_p=0.95,
         top_k=1000,
-        temperature=0.8,
+        temperature=temp,
         num_beams=1,
         stopping_criteria=StoppingCriteriaList([stop])
         )
@@ -106,8 +90,15 @@ def predict(message, history):
             partial_message += new_token
             yield partial_message
 
+app = gr.Interface(
+    fn=infer,
+    inputs=["text", gr.Slider(0, 500,100), gr.Slider(0, 1, 0.8)],
+    outputs=["text"],
+    title="Unfinetuned Phi2 Model",
+    allow_flagging="manual",
+    flagging_options=["wrong answer", "off topic"]
+)
 
-gr.ChatInterface(predict).launch(share=True)
 
-#print(infer("### Question: Write in Solidity a function _super_adder for adding 6 uint256 numbers and return the result. The function should be internal\n### Answer:\n"))
-#print(infer("### Question: Write in Solidity a function get_winningProposal to Computes the winning proposal taking all previous votes into account.\n### Answer:\n"))
+if __name__ == "__main__":
+    app.launch(share=True)

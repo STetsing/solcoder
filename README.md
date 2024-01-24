@@ -34,3 +34,6 @@ Important: The token must have write access. This is use to push data and model 
 export HF_TOKEN="your write access token"
 export HF_BEARER_TK="your api bearer token from HF"
 ```
+
+## Launch accelerated training 
+> accelerate launch --num_cpu_threads_per_process 8  train/train_phi2_lora_qa.py 
