@@ -6,6 +6,7 @@ import evaluate
 import math
 import torch
 import pandas as pd
+from tqdm import tqdm
 from datasets import Dataset, DatasetDict
 from datasets import load_metric, load_from_disk 
 from transformers import AutoTokenizer
@@ -50,10 +51,14 @@ model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentran
 
 print('INFO: Model size is', model.num_parameters()/1e9, "GB\n")
 
-data_1 = pd.read_csv('./data/sourcify_0_comment_code_sol.csv')
-data_2 = pd.read_csv('./data/sourcify_10000_comment_code_sol.csv')
-data_3 = pd.read_csv('./data/sourcify_70000_comment_code_sol.csv')
-data = pd.concat([data_1, data_2, data_3])
+data = pd.DataFrame()
+for data_fln in tqdm(os.listdir('./data/'), desc='reading data'):
+    if '.csv' not in data_fln:
+        continue
+    else: 
+        content_df = pd.read_csv(os.path.join('./data/', data_fln))
+        data = pd.concat([data, content_df])
+
 data['code'] = data['code_string']
 dataset = Dataset.from_pandas(data)
 train = dataset.train_test_split(test_size=0.2)
@@ -78,7 +83,6 @@ print('INFO: The dataset', dataset)
 # print('#'*100)
 # print(tokenizer.decode(dataset['train']['input_ids'][12]))
 print("INFO: Length dataset:",len(dataset))
-print(dataset)
 
 def print_trainable_parameters (model) :
     # Prints the number of trainable parameters in the model.
