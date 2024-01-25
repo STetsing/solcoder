@@ -159,6 +159,7 @@ trainer = SFTTrainer(
     max_seq_length = 1024,
     formatting_func=formatting_prompts_func,
     packing=True,
+    neftune_noise_alpha=5
     #compute_metrics=compute_metrics,
     #data_collator=data_collator # very important, does the label shifting by 1
 )
