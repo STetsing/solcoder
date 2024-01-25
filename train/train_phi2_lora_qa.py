@@ -137,7 +137,7 @@ dataset = DatasetDict({
                         })
 print('INFO: The dataset', dataset)
 print("INFO: Length dataset:",len(dataset))
-print(f"INFO: pocessing data on {os.cpu_count()} cores))
+print(f"INFO: pocessing data on {os.cpu_count()} cores")
 
 trainer = SFTTrainer(
     model=model, 
