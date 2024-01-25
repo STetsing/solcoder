@@ -25,8 +25,8 @@ peft_config = LoraConfig(
     lora_dropout = 0.05,
     bias = "none",
     task_type = "CAUSAL_LM",
-    target_modules = ["fc1", "fc2"]#, 'q_proj', 'k_proj', 'v_proj'] #,'dense','fc1','fc2',embed_tokens
-    #target_modules = ["fc1", "fc2", 'q_proj', 'k_proj', 'v_proj'] #,'dense','fc1','fc2',embed_tokens
+    #target_modules = ["fc1", "fc2"]#, 'q_proj', 'k_proj', 'v_proj'] #,'dense','fc1','fc2',embed_tokens
+    target_modules = ["fc1", "fc2", 'q_proj', 'k_proj', 'v_proj'] #,'dense','fc1','fc2',embed_tokens
 )
 
 bnb_conig = BitsAndBytesConfig(
