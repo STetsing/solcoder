@@ -76,8 +76,8 @@ print('INFO: Model size is', model.num_parameters()/1e9, "GB\n")
 training_args = TrainingArguments('Phi2-SolCoder-lora-qa3', 
         evaluation_strategy="epoch", 
         learning_rate=2e-4, 
-        per_device_eval_batch_size=30,
-        per_device_train_batch_size=30,
+        per_device_eval_batch_size=25,
+        per_device_train_batch_size=25,
         num_train_epochs=10,
         push_to_hub=False,
         save_total_limit=2,
@@ -93,6 +93,8 @@ training_args = TrainingArguments('Phi2-SolCoder-lora-qa3',
         warmup_ratio = 0.05,
         weight_decay = 0.01,
         ddp_find_unused_parameters=False,
+        push_to_hub_model_id="Pipper/Phi2-SolCoder-lora-qa3",
+        push_to_hub=True,
         seed=100)
 
 
