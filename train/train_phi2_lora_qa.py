@@ -93,7 +93,7 @@ training_args = TrainingArguments('Phi2-SolCoder-lora-qa3',
         warmup_ratio = 0.05,
         weight_decay = 0.01,
         ddp_find_unused_parameters=False,
-        push_to_hub_model_id="Pipper/Phi2-SolCoder-lora-qa3",
+        push_to_hub_model_id="Phi2-SolCoder-lora-qa3",
         seed=100)
 
 
