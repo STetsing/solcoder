@@ -48,6 +48,7 @@ model.config.use_cache = False
 model.config.pretraining_tp = 1
 model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
 model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": True})
+print(model)
 
 print('INFO: Model size is', model.num_parameters()/1e9, "GB\n")
 
@@ -118,7 +119,7 @@ training_args = TrainingArguments('Phi2-SolCoder-lora-qa3',
         seed=100)
 
 peft_config = LoraConfig(
-    r = 16, 
+    r = 32, 
     lora_alpha = 64, 
     lora_dropout = 0.05,
     bias = "none",
