@@ -8,7 +8,7 @@ import torch
 import pandas as pd
 from tqdm import tqdm
 from datasets import Dataset, DatasetDict
-from datasets import load_metric, load_from_disk 
+from datasets import load_metric, load_from_disk
 from transformers import AutoTokenizer
 from transformers import AutoModelForCausalLM, Trainer, TrainerCallback, TrainingArguments, T5ForConditionalGeneration
 from transformers import DataCollatorForLanguageModeling, BitsAndBytesConfig, HfArgumentParser
@@ -117,24 +117,30 @@ def formatting_prompts_func(example):
     return text 
 
 
-data = pd.DataFrame()
-for data_fln in tqdm(os.listdir('./data/'), desc='reading data'):
-    if '.csv' not in data_fln:
-        continue
-    else: 
-        content_df = pd.read_csv(os.path.join('./data/', data_fln))
-        data = pd.concat([data, content_df])
+if not os.path.exists('./Solcoder_QA'):
+    data = pd.DataFrame()
+    for data_fln in tqdm(os.listdir('./data/'), desc='reading data'):
+        if '.csv' not in data_fln:
+            continue
+        else: 
+            content_df = pd.read_csv(os.path.join('./data/', data_fln))
+            data = pd.concat([data, content_df])
 
-data['code'] = data['code_string']
-dataset = Dataset.from_pandas(data)
-train = dataset.train_test_split(test_size=0.2)
-test_valid = train['test'].train_test_split(test_size=0.5)
+    data['code'] = data['code_string']
+    dataset = Dataset.from_pandas(data)
+    train = dataset.train_test_split(test_size=0.2)
+    test_valid = train['test'].train_test_split(test_size=0.5)
 
-dataset = DatasetDict({
-                        'train': train['train'],
-                        'test': test_valid['test'],
-                        'valid': test_valid['train']
-                        })
+    dataset = DatasetDict({
+                            'train': train['train'],
+                            'test': test_valid['test'],
+                            'valid': test_valid['train']
+                            })
+
+    dataset.save_to_disk('./Solcoder_QA')
+else: 
+    dataset = load_from_disk('./Solcoder_QA')
+    
 print('INFO: The dataset', dataset)
 print("INFO: Length dataset:",len(dataset))
 print(f"INFO: pocessing data on {os.cpu_count()} cores")
