@@ -75,8 +75,8 @@ print('INFO: Model size is', model.num_parameters()/1e9, "GB\n")
 training_args = TrainingArguments('Phi2-SolCoder-lora-qa3', 
         evaluation_strategy="epoch", 
         learning_rate=2e-4, 
-        per_device_eval_batch_size=6,
-        per_device_train_batch_size=6,
+        per_device_eval_batch_size=60,
+        per_device_train_batch_size=60,
         num_train_epochs=10,
         push_to_hub=False,
         save_total_limit=2,
@@ -87,7 +87,7 @@ training_args = TrainingArguments('Phi2-SolCoder-lora-qa3',
         eval_steps = 100,
         logging_steps=100,
         optim="paged_adamw_8bit",
-        gradient_accumulation_steps=5,
+        gradient_accumulation_steps=2,
         lr_scheduler_type = "cosine",
         warmup_ratio = 0.05,
         weight_decay = 0.01,
@@ -140,7 +140,7 @@ if not os.path.exists('./Solcoder_QA'):
     dataset.save_to_disk('./Solcoder_QA')
 else: 
     dataset = load_from_disk('./Solcoder_QA')
-    
+
 print('INFO: The dataset', dataset)
 print("INFO: Length dataset:",len(dataset))
 print(f"INFO: pocessing data on {os.cpu_count()} cores")
