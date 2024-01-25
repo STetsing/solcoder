@@ -139,7 +139,7 @@ if not os.path.exists('./Solcoder_QA'):
 
     dataset.save_to_disk('./Solcoder_QA')
 else: 
-    dataset = load_from_disk('./Solcoder_QA')
+    dataset = load_from_disk('./Solcoder_QA', keep_in_memory=True)
 
 print('INFO: The dataset', dataset)
 print("INFO: Length dataset:",len(dataset))
