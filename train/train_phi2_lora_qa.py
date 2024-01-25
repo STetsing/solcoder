@@ -137,6 +137,7 @@ dataset = DatasetDict({
                         })
 print('INFO: The dataset', dataset)
 print("INFO: Length dataset:",len(dataset))
+print(f"INFO: pocessing data on {os.cpu_count()} cores))
 
 trainer = SFTTrainer(
     model=model, 
@@ -144,7 +145,7 @@ trainer = SFTTrainer(
     args=training_args, 
     train_dataset=dataset['train'], 
     eval_dataset=dataset['valid'], 
-    dataset_num_proc = 30,
+    dataset_num_proc = os.cpu_count(),
     dataset_batch_size = 100,
     #dataset_text_field = 'code',
     #callbacks=[PerplexCallback],
