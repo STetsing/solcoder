@@ -142,7 +142,7 @@ def formatting_prompts_func(example):
 # else: 
 #     dataset = load_from_disk('./Solcoder_QA', keep_in_memory=True)
 
-dataset = load_dataset('Pipepr/Solcoder_QA', keep_in_memory=True)
+dataset = load_dataset('Pipper/Solcoder_QA', keep_in_memory=True)
 print('INFO: The dataset', dataset)
 print("INFO: Length dataset:",len(dataset))
 print(f"INFO: pocessing data on {os.cpu_count()} cores")
