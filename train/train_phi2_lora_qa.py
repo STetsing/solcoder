@@ -19,6 +19,14 @@ from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
 
 # single GPU
 # os.environ["CUDA_VISIBLE_DEVICES"]="0"
+peft_config = LoraConfig(
+    r = 32, 
+    lora_alpha = 64, 
+    lora_dropout = 0.05,
+    bias = "none",
+    task_type = "CAUSAL_LM",
+    target_modules = ["Wqkv", "fc1", "fc2", 'q_proj', 'k_proj', 'v_proj'] #,'dense','fc1','fc2',embed_tokens
+)
 
 bnb_conig = BitsAndBytesConfig(
     load_in_4bit = True,
@@ -26,6 +34,18 @@ bnb_conig = BitsAndBytesConfig(
     bnb_4bit_use_double_quant=True,
     bnb_4bit_compute_dtype=torch.bfloat16
 )
+
+def print_trainable_parameters (model) :
+    # Prints the number of trainable parameters in the model.
+    trainable_params = 0
+    all_param = 0
+    for _, param in model.named_parameters ( ):
+        all_param += param .numel ( )
+        if param. requires_grad:
+            trainable_params += param. numel ()
+    print(f"trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param}")
+
+
 
 accelerator = Accelerator()
 device = accelerator.device
@@ -49,51 +69,8 @@ model.config.pretraining_tp = 1
 model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
 model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": True})
 print(model)
-
 print('INFO: Model size is', model.num_parameters()/1e9, "GB\n")
-
-data = pd.DataFrame()
-for data_fln in tqdm(os.listdir('./data/'), desc='reading data'):
-    if '.csv' not in data_fln:
-        continue
-    else: 
-        content_df = pd.read_csv(os.path.join('./data/', data_fln))
-        data = pd.concat([data, content_df])
-
-data['code'] = data['code_string']
-dataset = Dataset.from_pandas(data)
-train = dataset.train_test_split(test_size=0.2)
-test_valid = train['test'].train_test_split(test_size=0.5)
-
-dataset = DatasetDict({
-                        'train': train['train'],
-                        'test': test_valid['test'],
-                        'valid': test_valid['train']
-                        })
-print('INFO: The dataset', dataset)
-#dataset['train'] = dataset['train'].select(np.arange(0, 10000, 1))
-#dataset['valid'] = dataset['valid'].select(np.arange(0, 1000, 1))
-#dataset['test'] = dataset['test'].select(np.arange(0, 1000, 1))
-#dataset = dataset.map(process_samples, batched=True, num_proc=30, batch_size=100, remove_columns=dataset["train"].column_names)
-#dataset = dataset.map(group_texts, batch_size=50, batched=True, num_proc=30)
-
-
-# print(tokenizer.decode(dataset['train']['input_ids'][10]))
-# print('#'*100)
-# print(tokenizer.decode(dataset['train']['input_ids'][11]))
-# print('#'*100)
-# print(tokenizer.decode(dataset['train']['input_ids'][12]))
-print("INFO: Length dataset:",len(dataset))
-
-def print_trainable_parameters (model) :
-    # Prints the number of trainable parameters in the model.
-    trainable_params = 0
-    all_param = 0
-    for _, param in model.named_parameters ( ):
-        all_param += param .numel ( )
-        if param. requires_grad:
-            trainable_params += param. numel ()
-    print(f"trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param}")
+print_trainable_parameters(model)
 
 
 training_args = TrainingArguments('Phi2-SolCoder-lora-qa3', 
@@ -118,14 +95,6 @@ training_args = TrainingArguments('Phi2-SolCoder-lora-qa3',
         ddp_find_unused_parameters=False,
         seed=100)
 
-peft_config = LoraConfig(
-    r = 32, 
-    lora_alpha = 64, 
-    lora_dropout = 0.05,
-    bias = "none",
-    task_type = "CAUSAL_LM",
-    target_modules = ["Wqkv", "fc1", "fc2"], # 'q_proj', 'k_proj', 'v_proj','dense','fc1','fc2',embed_tokens
-)
 
 
 def compute_metrics(eval_pred):
@@ -148,6 +117,28 @@ def formatting_prompts_func(example):
     text = f"### Solidity Instruction: {example['comments']}\n ### Answer: {example['code']}"
     return text 
 
+
+data = pd.DataFrame()
+for data_fln in tqdm(os.listdir('./data/'), desc='reading data'):
+    if '.csv' not in data_fln:
+        continue
+    else: 
+        content_df = pd.read_csv(os.path.join('./data/', data_fln))
+        data = pd.concat([data, content_df])
+
+data['code'] = data['code_string']
+dataset = Dataset.from_pandas(data)
+train = dataset.train_test_split(test_size=0.2)
+test_valid = train['test'].train_test_split(test_size=0.5)
+
+dataset = DatasetDict({
+                        'train': train['train'],
+                        'test': test_valid['test'],
+                        'valid': test_valid['train']
+                        })
+print('INFO: The dataset', dataset)
+print("INFO: Length dataset:",len(dataset))
+
 trainer = SFTTrainer(
     model=model, 
     tokenizer=tokenizer,
@@ -166,7 +157,6 @@ trainer = SFTTrainer(
     #data_collator=data_collator # very important, does the label shifting by 1
 )
 
-print_trainable_parameters(model)
 loader = trainer.get_train_dataloader()
 for b in loader:
     break
