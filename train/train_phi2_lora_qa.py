@@ -79,7 +79,7 @@ training_args = TrainingArguments('Phi2-SolCoder-lora-qa3',
         per_device_eval_batch_size=25,
         per_device_train_batch_size=25,
         num_train_epochs=10,
-        push_to_hub=False,
+        push_to_hub=True,
         save_total_limit=2,
         load_best_model_at_end=True,
         save_strategy = "epoch",
@@ -94,7 +94,6 @@ training_args = TrainingArguments('Phi2-SolCoder-lora-qa3',
         weight_decay = 0.01,
         ddp_find_unused_parameters=False,
         push_to_hub_model_id="Pipper/Phi2-SolCoder-lora-qa3",
-        push_to_hub=True,
         seed=100)
 
 
