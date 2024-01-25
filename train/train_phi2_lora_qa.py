@@ -25,7 +25,7 @@ peft_config = LoraConfig(
     lora_dropout = 0.05,
     bias = "none",
     task_type = "CAUSAL_LM",
-    target_modules = ["Wqkv", "fc1", "fc2", 'q_proj', 'k_proj', 'v_proj'] #,'dense','fc1','fc2',embed_tokens
+    target_modules = ["fc1", "fc2", 'q_proj', 'k_proj', 'v_proj'] #,'dense','fc1','fc2',embed_tokens
 )
 
 bnb_conig = BitsAndBytesConfig(
@@ -70,7 +70,6 @@ model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
 model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": True})
 print(model)
 print('INFO: Model size is', model.num_parameters()/1e9, "GB\n")
-print_trainable_parameters(model)
 
 
 training_args = TrainingArguments('Phi2-SolCoder-lora-qa3', 
@@ -109,7 +108,7 @@ class PerplexCallback(TrainerCallback):
         eval_results = trainer.evaluate()
         print(f"\nModel Perplexity: {math.exp(eval_results['eval_loss']):.2f}")
 
-response_template = " ### Answer:"
+response_template = "### Answer:"
 
 data_collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=tokenizer)
 
@@ -156,6 +155,9 @@ trainer = SFTTrainer(
     #compute_metrics=compute_metrics,
     #data_collator=data_collator # very important, does the label shifting by 1
 )
+
+print_trainable_parameters(model)
+
 
 loader = trainer.get_train_dataloader()
 for b in loader:
