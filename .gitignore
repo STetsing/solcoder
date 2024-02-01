@@ -20,3 +20,5 @@ Sol*
 Phi2-SolCoder-lora*
 data*
 flagged
+new_trains
+**/**/*.gguf

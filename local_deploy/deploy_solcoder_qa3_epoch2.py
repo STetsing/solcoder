@@ -8,9 +8,10 @@ import gradio as gr
 from threading import Thread
 
 
-device = "cuda:3" if torch.cuda.is_available() else 'cpu'
+device = "cuda:1" if torch.cuda.is_available() else 'cpu'
 
-model_path = "microsoft/phi-2"
+model_path = './new_trains/Phi2-SolCoder-lora-qa3/checkpoint-2677'
+
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 model = AutoModelForCausalLM.from_pretrained(model_path,
                                             #load_in_4bit=True,
@@ -18,9 +19,9 @@ model = AutoModelForCausalLM.from_pretrained(model_path,
                                             device_map=device)
 
 print(model.get_memory_footprint()/1e9)
-#model =  PeftModel.from_pretrained(model, model_path)
-#model = model.merge_and_unload()
-#print(model.get_memory_footprint()/1e9)
+model =  PeftModel.from_pretrained(model, model_path)
+model = model.merge_and_unload()
+print(model.get_memory_footprint()/1e9)
 
 def is_tensor_at_end(main_tensor, sub_tensor):
     # Convert scalar tensor to tensor
@@ -49,17 +50,20 @@ class StoppingCriteriaSub(StoppingCriteria):
         for icw in self.in_code_token:
             if is_tensor_at_end(input_ids[0], icw):
                 self.in_code += 1
+                if torch.equal(input_ids[0], self.stops[0]):
+                    return True 
 
         for stop in self.stops:
             #print(stop, "in inputs:", is_tensor_at_end(input_ids[0], stop))
             #print('In code value:', self.in_code)
             if is_tensor_at_end(input_ids[0], stop):
                 self.in_code -= 1
-                return True if self.in_code==0 else False
+                
+                return True if self.in_code<=0 else False
         return False
 
 def stopping_criteria():
-    stop_words = ["\nQuestion:", "}\n", "User:", "INSTRUCTION", "INPUT:", "A:"]
+    stop_words = ["###", "### Solidity Instruction:", "\nQuestion:", "}\n", "User:", "INSTRUCTION:", "INPUT:", "A:", "Instruction:", "Output:"]
     stop_words_ids = [tokenizer(stop_word, return_tensors='pt')['input_ids'].squeeze() for stop_word in stop_words]
     print('Stop ids:', stop_words_ids)
     stopping_criteria = StoppingCriteriaList([StoppingCriteriaSub(stops=stop_words_ids)])
@@ -67,7 +71,7 @@ def stopping_criteria():
 
 def infer(comment, mnt=200, temp=0.8):
     stop = stopping_criteria()
-    comment = "### Question: // Write in solidity "+ comment + "\nAnswer:\n"
+    comment = "### Solidity Instruction: "+ comment + "\n ### Answer:\n"
     model_inputs = tokenizer([comment], return_tensors="pt").to(device)
     streamer = TextIteratorStreamer(tokenizer, timeout=10., skip_prompt=True, skip_special_tokens=True)
     generate_kwargs = dict(
@@ -76,10 +80,9 @@ def infer(comment, mnt=200, temp=0.8):
         max_new_tokens=mnt,
         do_sample=True,
         top_p=0.95,
-        top_k=10,
+        top_k=1000,
         temperature=temp,
-        early_stopping=True,
-        num_return_sequences=15,
+        num_beams=1,
         stopping_criteria=StoppingCriteriaList([stop])
         )
     t = Thread(target=model.generate, kwargs=generate_kwargs)
@@ -89,13 +92,15 @@ def infer(comment, mnt=200, temp=0.8):
     for new_token in streamer:
         if new_token != '<':
             partial_message += new_token
+            partial_message.replace('###','')
+            partial_message.replace('Solidity Instruction:','')
             yield partial_message
 
 app = gr.Interface(
     fn=infer,
+    title=model_path,
     inputs=["text", gr.Slider(0, 500,100), gr.Slider(0, 1, 0.8)],
     outputs=["text"],
-    title="Unfinetuned Phi2 Model",
     allow_flagging="manual",
     flagging_options=["wrong answer", "off topic"]
 )
