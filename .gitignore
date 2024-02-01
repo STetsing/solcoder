@@ -14,3 +14,11 @@ sol_dataset
 SolCoder
 __pycache__/
 *.pyc
+wandb
+slither_processed_contracts
+Sol*
+Phi2-SolCoder-lora*
+data*
+flagged
+new_trains
+**/**/*.gguf
